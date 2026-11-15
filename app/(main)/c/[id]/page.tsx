@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { ConversationMessageList } from "@/features/conversations/components/conversation-message-list"
+import { ConversationHeader } from "@/features/conversations/components/conversation-header"
 
 type ConversationPageProps = {
   params: Promise<{ id: string }>
@@ -10,5 +11,10 @@ type ConversationPageProps = {
 export default function ConversationPage({ params }: ConversationPageProps) {
   const { id } = React.use(params)
 
-  return <ConversationMessageList name={`conversations/${id}`} />
+  return (
+    <main className="flex h-dvh min-h-0 flex-col">
+      <ConversationHeader name={`conversations/${id}`} />
+      <ConversationMessageList name={`conversations/${id}`} />
+    </main>
+  )
 }

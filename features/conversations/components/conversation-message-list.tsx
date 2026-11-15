@@ -50,7 +50,7 @@ export function ConversationMessageList({
   }
 
   return (
-    <div className="flex h-dvh min-h-0 flex-col" {...props}>
+    <div className="flex h-dvh min-h-0 flex-col px-2" {...props}>
       <MessageScrollerProvider autoScroll defaultScrollPosition="end">
         <MessageScroller className="min-h-0 flex-1">
           <MessageScrollerViewport>
