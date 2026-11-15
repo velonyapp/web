@@ -41,8 +41,10 @@ export function ConversationMessageListItem({
       <Message>
         <MessageAvatar
           className={cn(
-            "mt-2 self-start group-has-data-[slot=message-footer]/message:translate-y-0",
-            mergeWithPrevious && "invisible"
+            "self-start group-has-data-[slot=message-footer]/message:translate-y-0",
+            mergeWithPrevious
+              ? "invisible mt-0 h-0 min-h-0 overflow-hidden"
+              : "mt-2"
           )}
         >
           <Avatar>
