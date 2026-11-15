@@ -9,7 +9,7 @@ export async function listMessages(conversationName: string) {
     .filter((message) => message.name.startsWith(`${collectionName}/`))
     .sort(
       (a, b) =>
-        b.createTime.getTime() - a.createTime.getTime() ||
-        b.name.localeCompare(a.name)
+        a.createTime.getTime() - b.createTime.getTime() ||
+        a.name.localeCompare(b.name)
     )
 }
