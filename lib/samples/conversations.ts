@@ -28,9 +28,9 @@ export const sampleConversations = z.map(z.string(), ConversationSchema).parse(
         description:
           "No particular topic, no particular rules. Just people talking about whatever comes to mind.",
         lastMessage:
-          "conversations/3c91f7a0-6d24-4b85-ae19-5f02c8d74b63/messages/727b38e9-2574-5621-8c52-45909030b3f4",
+          "conversations/3c91f7a0-6d24-4b85-ae19-5f02c8d74b63/messages/ea7b6eb0-3964-5cad-8c35-d95c4883dace",
         createTime: new Date("2026-11-11T07:48:00Z"),
-        updateTime: new Date("2026-11-15T13:25:56Z"),
+        updateTime: new Date("2026-11-15T14:36:01Z"),
       },
     ],
     [
