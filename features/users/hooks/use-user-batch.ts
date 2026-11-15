@@ -65,7 +65,7 @@ export function useUserBatch(names: string[]) {
     let active = true
 
     void client
-      .fetchQuery({
+      .query({
         queryKey: ["user-batch", missing],
         queryFn: () => batchGetUsers(missing),
         staleTime: 0,

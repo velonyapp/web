@@ -65,7 +65,7 @@ export function useMessageBatch(names: string[]) {
     let active = true
 
     void client
-      .fetchQuery({
+      .query({
         queryKey: ["message-batch", missing],
         queryFn: () => batchGetMessages(missing),
         staleTime: 0,
