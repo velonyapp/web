@@ -54,15 +54,34 @@ export function ConversationMessageList({
       <MessageScrollerProvider autoScroll defaultScrollPosition="end">
         <MessageScroller className="min-h-0 flex-1">
           <MessageScrollerViewport>
-            <MessageScrollerContent className="gap-2">
-              {messageList?.map((message) => (
-                <ConversationMessageListItem
-                  key={message.name}
-                  messageId={message.name}
-                  message={message}
-                  user={userBatch?.get(message.user ?? "")}
-                />
-              ))}
+            <MessageScrollerContent className="gap-1">
+              {messageList?.map((message, index, messages) => {
+                const previousMessage = messages[index - 1]
+                const nextMessage = messages[index + 1]
+                const minute = Math.floor(message.createTime.getTime() / 60000)
+
+                return (
+                  <ConversationMessageListItem
+                    key={message.name}
+                    messageId={message.name}
+                    message={message}
+                    user={userBatch?.get(message.user ?? "")}
+                    mergeWithPrevious={
+                      message.user !== undefined &&
+                      previousMessage?.user === message.user &&
+                      Math.floor(
+                        previousMessage.createTime.getTime() / 60000
+                      ) === minute
+                    }
+                    mergeWithNext={
+                      message.user !== undefined &&
+                      nextMessage?.user === message.user &&
+                      Math.floor(nextMessage.createTime.getTime() / 60000) ===
+                        minute
+                    }
+                  />
+                )
+              })}
             </MessageScrollerContent>
           </MessageScrollerViewport>
 

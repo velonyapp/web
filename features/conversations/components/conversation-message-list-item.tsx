@@ -23,11 +23,15 @@ type ConversationMessageListItemProps = React.ComponentProps<
 > & {
   message: MessageX
   user?: User
+  mergeWithNext?: boolean
+  mergeWithPrevious?: boolean
 }
 
 export function ConversationMessageListItem({
   message,
   user,
+  mergeWithNext = false,
+  mergeWithPrevious = false,
   ...props
 }: ConversationMessageListItemProps) {
   const isUserPending = message.user !== undefined && user === undefined
@@ -35,7 +39,12 @@ export function ConversationMessageListItem({
   return (
     <MessageScrollerItem {...props}>
       <Message>
-        <MessageAvatar>
+        <MessageAvatar
+          className={cn(
+            "mt-2 self-start group-has-data-[slot=message-footer]/message:translate-y-0",
+            mergeWithPrevious && "invisible"
+          )}
+        >
           <Avatar>
             {isUserPending ? (
               <Skeleton className="size-full rounded-full" />
@@ -60,20 +69,26 @@ export function ConversationMessageListItem({
           </Avatar>
         </MessageAvatar>
 
-        <MessageContent className="gap-1">
-          <MessageHeader>
-            {isUserPending ? "..." : (user?.username ?? "Unknown")}
-          </MessageHeader>
+        <MessageContent className="gap-0">
+          <div className="flex flex-col gap-0.5">
+            {!mergeWithPrevious && (
+              <MessageHeader className="px-1">
+                {isUserPending ? "..." : (user?.username ?? "Unknown")}
+              </MessageHeader>
+            )}
 
-          <Bubble variant="secondary">
-            <BubbleContent>{message.content}</BubbleContent>
-          </Bubble>
+            <Bubble variant="secondary">
+              <BubbleContent>{message.content}</BubbleContent>
+            </Bubble>
+          </div>
 
-          <MessageFooter>
-            <time dateTime={message.createTime.toISOString()}>
-              {timeFormatter.format(message.createTime)}
-            </time>
-          </MessageFooter>
+          {!mergeWithNext && (
+            <MessageFooter className="px-2">
+              <time dateTime={message.createTime.toISOString()}>
+                {timeFormatter.format(message.createTime)}
+              </time>
+            </MessageFooter>
+          )}
         </MessageContent>
       </Message>
     </MessageScrollerItem>
