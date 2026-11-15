@@ -7,6 +7,7 @@ import { type Conversation } from "@/features/conversations/schemas/conversation
 import { type Message } from "@/features/messages/schemas/message"
 import { type User } from "@/features/users/schemas/user"
 import { cn } from "cn"
+import Link from "next/link"
 
 type ConversationSidebarListItemProps = React.ComponentProps<"div"> & {
   conversation?: Conversation
@@ -25,7 +26,7 @@ export function ConversationSidebarListItem({
   const isUserPending =
     lastMessage?.user !== undefined && lastMessageUser === undefined
 
-  return (
+  const content = (
     <div
       className={cn(
         "flex w-full max-w-full min-w-0 items-start gap-2 overflow-hidden border-b p-4 text-sm leading-tight last:border-b-0",
@@ -79,6 +80,14 @@ export function ConversationSidebarListItem({
         </div>
       </div>
     </div>
+  )
+
+  if (!conversation) return content
+
+  return (
+    <Link href={`/c/${conversation.name.split("/").pop()}`} className="block">
+      {content}
+    </Link>
   )
 }
 
