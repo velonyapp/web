@@ -1,95 +1,115 @@
-import { useEffect, useState } from "react"
-import { batchGetMessages } from "@/features/messages/api/batch-get-messages"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react"
 import { notifyManager, useQueryClient } from "@tanstack/react-query"
-import { Message } from "@/features/messages/schemas/message"
+import { batchGetMessages } from "@/features/messages/api/batch-get-messages"
+import type { Message } from "@/features/messages/schemas/message"
 
 export function useMessageBatch(names: string[]) {
-  const queryClient = useQueryClient()
-
-  const [data, setData] = useState<Map<string, Message> | undefined>(undefined)
-  const [error, setError] = useState<Error | null>(null)
-  const [isPending, setIsPending] = useState(true)
-
+  const client = useQueryClient()
   const namesKey = JSON.stringify(names)
 
+  const uniqueNames = useMemo(
+    () => [...new Set(JSON.parse(namesKey) as string[])],
+    [namesKey]
+  )
+
+  const snapshot = useRef(new Map<string, Message>())
+
+  const subscribe = useCallback(
+    (onChange: () => void) =>
+      client.getQueryCache().subscribe(notifyManager.batchCalls(onChange)),
+    [client]
+  )
+
+  const getSnapshot = useCallback(() => {
+    const next = new Map<string, Message>()
+
+    for (const name of uniqueNames) {
+      const message = client.getQueryData<Message>([name])
+      if (message !== undefined) next.set(name, message)
+    }
+
+    const previous = snapshot.current
+
+    if (
+      previous.size === next.size &&
+      [...next].every(([name, message]) => previous.get(name) === message)
+    ) {
+      return previous
+    }
+
+    snapshot.current = next
+    return next
+  }, [client, uniqueNames])
+
+  const cached = useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
+
+  const [failure, setFailure] = useState<{
+    key: string
+    error: Error
+  } | null>(null)
+
   useEffect(() => {
-    let cancelled = false
+    const missing = uniqueNames.filter(
+      (name) => client.getQueryData([name]) === undefined
+    )
 
-    async function fetch() {
-      setIsPending(true)
-      setError(null)
+    if (missing.length === 0) return
 
-      try {
-        const originalNames = JSON.parse(namesKey) as string[]
+    let active = true
 
-        const staleNames = [...new Set(originalNames)].filter((name) => {
-          const query = queryClient.getQueryCache().find({
-            queryKey: [name],
-            exact: true,
-          })
-          if (!query) {
-            return true
+    void client
+      .fetchQuery({
+        queryKey: ["message-batch", missing],
+        queryFn: () => batchGetMessages(missing),
+        staleTime: 0,
+      })
+      .then((messages) => {
+        notifyManager.batch(() => {
+          for (const message of messages) {
+            client.setQueryData<Message>([message.name], message)
           }
-          if (query.getObserversCount() > 0) {
-            return query.isStale()
-          }
-
-          const option = queryClient.defaultQueryOptions({
-            queryKey: query.queryKey,
-          }).staleTime
-
-          return query.isStaleByTime(
-            typeof option === "function" ? option(query) : option
-          )
         })
 
-        if (staleNames.length > 0) {
-          const messages = await batchGetMessages(staleNames)
-
-          if (cancelled) {
-            return
-          }
-
-          notifyManager.batch(() => {
-            for (const message of messages) {
-              queryClient.setQueryData<Message>([message.name], message)
-            }
-          })
-        }
-
-        const messages = new Map(
-          originalNames.map((name) => {
-            const message = queryClient.getQueryData<Message>([name])
-            if (!message) throw new Error(`Missing message: ${name}`)
-            return [name, message]
-          })
+        const unresolved = missing.filter(
+          (name) => client.getQueryData([name]) === undefined
         )
 
-        if (!cancelled) {
-          setData(messages)
+        if (active && unresolved.length) {
+          setFailure({
+            key: namesKey,
+            error: new Error(`Missing messages: ${unresolved.join(", ")}`),
+          })
         }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err : new Error(String(err)))
+      })
+      .catch((err) => {
+        if (active) {
+          setFailure({
+            key: namesKey,
+            error: err instanceof Error ? err : new Error(String(err)),
+          })
         }
-      } finally {
-        if (!cancelled) {
-          setIsPending(false)
-        }
-      }
-    }
-
-    fetch()
+      })
 
     return () => {
-      cancelled = true
+      active = false
     }
-  }, [namesKey, queryClient])
+  }, [client, namesKey, uniqueNames])
+
+  const missing = uniqueNames.some((name) => !cached.has(name))
+
+  const error = missing && failure?.key === namesKey ? failure.error : null
 
   return {
-    data,
+    data: cached.size > 0 || uniqueNames.length === 0 ? cached : undefined,
     error,
-    isPending,
+    isPending: missing && error === null,
     isError: error !== null,
   }
 }
