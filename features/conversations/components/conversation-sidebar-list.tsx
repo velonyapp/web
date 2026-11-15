@@ -1,0 +1,85 @@
+"use client"
+
+import * as React from "react"
+
+import { useConversationList } from "@/features/conversations/hooks/use-conversationList"
+import { ConversationSidebarListItem } from "@/features/conversations/components/conversation-sidebar-list-item"
+import { useMessageBatch } from "@/features/messages/hooks/use-message-batch"
+import { useUserBatch } from "@/features/users/hooks/use-user-batch"
+import { type Message } from "@/features/messages/schemas/message"
+import { type User } from "@/features/users/schemas/user"
+
+export function ConversationSidebarList({
+  ...props
+}: React.ComponentProps<"div">) {
+  const {
+    data: conversationList,
+    error: conversationListError,
+    isPending: isConversationListPending,
+    isError: isConversationListError,
+  } = useConversationList()
+  const {
+    data: messageBatch,
+    error: messageBatchError,
+    isError: isMessageBatchError,
+  } = useMessageBatch(
+    conversationList
+      ?.map((conversation) => conversation.lastMessage)
+      .filter((message) => message != null) ?? []
+  )
+  const {
+    data: userBatch,
+    error: userBatchError,
+    isError: isUserBatchError,
+  } = useUserBatch(
+    Array.from(messageBatch?.values() ?? [])
+      .map((message) => message.user)
+      .filter((user): user is string => user != null)
+  )
+
+  if (isConversationListError) {
+    throw conversationListError
+  }
+  if (isMessageBatchError) {
+    throw messageBatchError
+  }
+  if (isUserBatchError) {
+    throw userBatchError
+  }
+
+  if (isConversationListPending) {
+    return (
+      <div {...props}>
+        {Array.from({ length: 25 }, (_, index) => (
+          <ConversationSidebarListItem key={index} />
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div {...props}>
+      {conversationList?.map((conversation) => {
+        let lastMessage: Message | undefined = undefined
+        let lastMessageUser: User | undefined = undefined
+
+        if (conversation.lastMessage !== undefined) {
+          lastMessage = messageBatch?.get(conversation.lastMessage)
+
+          if (lastMessage?.user != undefined) {
+            lastMessageUser = userBatch?.get(lastMessage.user)
+          }
+        }
+
+        return (
+          <ConversationSidebarListItem
+            key={conversation.name}
+            conversation={conversation}
+            lastMessage={lastMessage}
+            lastMessageUser={lastMessageUser}
+          />
+        )
+      })}
+    </div>
+  )
+}
