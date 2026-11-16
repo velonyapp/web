@@ -42,7 +42,7 @@ export default function MainLayout({
         {showAgentSidebar && <AgentSidebar />}
         {showModelSidebar && <ModelSidebar />}
       </Sidebar>
-      <SidebarInset className="relative">
+      <SidebarInset className="relative min-w-0">
         <SidebarTrigger className="absolute top-2 left-2 z-50 bg-background/80 backdrop-blur-sm" />
 
         {children}
