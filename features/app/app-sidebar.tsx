@@ -26,7 +26,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar
       collapsible="none"
-      className="w-[calc(var(--sidebar-width-icon)+1px)]! border-r"
+      className="w-[calc(var(--sidebar-width-icon)+1px)]! shrink-0 overflow-hidden border-r"
       {...props}
     >
       <SidebarHeader>
@@ -42,16 +42,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   className="size-8 object-contain"
                 />
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">VelonY</span>
-              </div>
+              <span className="sr-only">VelonY</span>
             </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupContent className="px-1.5 md:px-0">
+          <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
@@ -64,10 +62,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     setOpen(true)
                   }}
                   isActive={pathname === "/" || pathname.startsWith("/c/")}
-                  className="px-2.5 md:px-2"
+                  className="px-2"
                 >
                   <MessagesSquareIcon />
-                  <span>Conversations</span>
+                  <span className="sr-only">Conversations</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
@@ -82,10 +80,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     setOpen(true)
                   }}
                   isActive={pathname === "/a" || pathname.startsWith("/a/")}
-                  className="px-2.5 md:px-2"
+                  className="px-2"
                 >
                   <BotIcon />
-                  <span>Agents</span>
+                  <span className="sr-only">Agents</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
@@ -100,10 +98,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     setOpen(true)
                   }}
                   isActive={pathname === "/m" || pathname.startsWith("/m/")}
-                  className="px-2.5 md:px-2"
+                  className="px-2"
                 >
                   <CpuIcon />
-                  <span>Models</span>
+                  <span className="sr-only">Models</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
