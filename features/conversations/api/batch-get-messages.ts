@@ -1,14 +1,14 @@
 import { toMessage } from "@/features/conversations/api/mappers"
 import { sampleMessages } from "@/features/conversations/samples/messages"
 import type { Message } from "@/features/conversations/types/message"
-import { resourceId } from "@/lib/api/resource-id"
+import { messageName } from "@/lib/api/resource-names"
 
 export async function batchGetMessages(ids: string[]): Promise<Message[]> {
   await new Promise((resolve) => setTimeout(resolve, 500))
 
   const messagesById = new Map(
     [...sampleMessages.values()].map((message) => [
-      resourceId(message.name),
+      messageName.match(message.name).message.toString(),
       message,
     ])
   )
