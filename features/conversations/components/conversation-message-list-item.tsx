@@ -2,7 +2,6 @@
 
 import * as React from "react"
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Bubble, BubbleContent } from "@/components/ui/bubble"
 import {
   Message,
@@ -12,11 +11,10 @@ import {
   MessageHeader,
 } from "@/components/ui/message"
 import { MessageScrollerItem } from "@/components/ui/message-scroller"
-import { Skeleton } from "@/components/ui/skeleton"
 import type { Message as MessageX } from "@/features/conversations/types/message"
 import type { User } from "@/features/identity/types/user"
-import { UserRoundIcon, UserRoundXIcon } from "lucide-react"
 import { cn } from "cn"
+import { ConversationMessageUserAvatar } from "./conversation-message-user-avatar"
 
 type ConversationMessageListItemProps = React.ComponentProps<
   typeof MessageScrollerItem
@@ -47,31 +45,7 @@ export function ConversationMessageListItem({
               : "mt-2"
           )}
         >
-          <Avatar>
-            {isUserPending ? (
-              <Skeleton className="size-full rounded-full" />
-            ) : (
-              <>
-                <AvatarImage
-                  src={user?.avatarUrl ?? undefined}
-                  alt={user?.username}
-                />
-                <AvatarFallback
-                  className={cn(
-                    user
-                      ? getAvatarColor(user.id)
-                      : "bg-zinc-500/15 text-zinc-400"
-                  )}
-                >
-                  {user ? (
-                    <UserRoundIcon className="size-4" />
-                  ) : (
-                    <UserRoundXIcon className="size-4" />
-                  )}
-                </AvatarFallback>
-              </>
-            )}
-          </Avatar>
+          <ConversationMessageUserAvatar user={user} isPending={isUserPending} />
         </MessageAvatar>
 
         <MessageContent className="gap-0">
@@ -104,24 +78,3 @@ const timeFormatter = new Intl.DateTimeFormat("en", {
   hour: "numeric",
   minute: "2-digit",
 })
-
-const avatarColors = [
-  "bg-rose-900/70 text-rose-100",
-  "bg-orange-900/70 text-orange-100",
-  "bg-amber-900/70 text-amber-100",
-  "bg-emerald-900/70 text-emerald-100",
-  "bg-teal-900/70 text-teal-100",
-  "bg-sky-900/70 text-sky-100",
-  "bg-indigo-900/70 text-indigo-100",
-  "bg-purple-900/70 text-purple-100",
-]
-
-function getAvatarColor(name: string) {
-  let hash = 0
-
-  for (const char of name) {
-    hash = (hash * 31 + char.codePointAt(0)!) | 0
-  }
-
-  return avatarColors[(hash >>> 0) % avatarColors.length]
-}
