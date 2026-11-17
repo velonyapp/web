@@ -4,10 +4,11 @@ import { queryCollectionOptions } from "@tanstack/query-db-collection"
 import { loadIds, valuesFor } from "@/lib/database/load-subset"
 
 import { batchGetMessages } from "@/features/conversations/api/batch-get-messages"
+import { getMessage } from "@/features/conversations/api/get-message"
 import { listMessages } from "@/features/conversations/api/list-messages"
 import type { Message } from "@/features/conversations/types/message"
 
-const api = { batchGetMessages, listMessages }
+const api = { batchGetMessages, getMessage, listMessages }
 export type MessagesApi = typeof api
 
 export const messagesCollection = collectionOptions("messages", (client) =>
@@ -22,21 +23,30 @@ export const messagesCollection = collectionOptions("messages", (client) =>
     queryFn: async ({ meta }): Promise<Message[]> => {
       const source = client.getDependency<MessagesApi>("messagesApi") ?? api
       const options = meta?.loadSubsetOptions
+
       const ids = valuesFor(options, "id")
       if (ids !== undefined) {
         return loadIds(
           ids,
           client.collection(messagesCollection),
-          (missing) => source.batchGetMessages(missing),
+          (missing) =>
+            missing.length === 1
+              ? source.getMessage(missing[0]).then((message) => [message])
+              : source.batchGetMessages(missing),
           options?.refetch
         )
       }
+
       const conversationIds = valuesFor(options, "conversationId")
-      if (conversationIds === undefined)
-        throw new Error("Messages require IDs or a conversation ID")
-      return (
-        await Promise.all(conversationIds.map((id) => source.listMessages(id)))
-      ).flat()
+      if (conversationIds !== undefined) {
+        return (
+          await Promise.all(
+            conversationIds.map((id) => source.listMessages(id))
+          )
+        ).flat()
+      }
+
+      throw new Error("Messages require IDs or a conversation ID")
     },
   })
 )

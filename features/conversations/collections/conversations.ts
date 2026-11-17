@@ -3,11 +3,12 @@ import { QueryClient } from "@tanstack/query-core"
 import { queryCollectionOptions } from "@tanstack/query-db-collection"
 import { loadIds, valuesFor } from "@/lib/database/load-subset"
 
+import { batchGetConversations } from "@/features/conversations/api/batch-get-conversations"
 import { getConversation } from "@/features/conversations/api/get-conversation"
 import { listConversations } from "@/features/conversations/api/list-conversations"
 import type { Conversation } from "@/features/conversations/types/conversation"
 
-const api = { getConversation, listConversations }
+const api = { batchGetConversations, getConversation, listConversations }
 export type ConversationsApi = typeof api
 
 export const conversationsCollection = collectionOptions(
@@ -25,16 +26,22 @@ export const conversationsCollection = collectionOptions(
         const source =
           client.getDependency<ConversationsApi>("conversationsApi") ?? api
         const options = meta?.loadSubsetOptions
+
         const ids = valuesFor(options, "id")
         if (ids !== undefined) {
           return loadIds(
             ids,
             client.collection(conversationsCollection),
             (missing) =>
-              Promise.all(missing.map((id) => source.getConversation(id))),
+              missing.length === 1
+                ? source
+                    .getConversation(missing[0])
+                    .then((conversation) => [conversation])
+                : source.batchGetConversations(missing),
             options?.refetch
           )
         }
+
         return source.listConversations()
       },
     })
