@@ -1,22 +1,19 @@
-import { useQuery } from "@tanstack/react-query"
-import { getConversation } from "@/features/conversations/api/get-conversation"
-import { Conversation } from "@/features/conversations/schemas/conversation"
+"use client"
+
+import { eq, useLiveQuery } from "@tanstack/react-db"
+import { conversationsCollection } from "@/features/conversations/collections/conversations"
+import { databaseQueryState } from "@/lib/database/query-state"
 
 export function useConversation(name: string) {
-  const { data, error, isPending, isError } = useQuery({
-    queryKey: [name],
-    queryFn: async ({ client }) => {
-      const conversation = await getConversation(name)
-
-      client.setQueryData<Conversation[]>(["conversations"], (old) =>
-        old?.map((item) =>
-          item.name === conversation.name ? conversation : item
-        )
-      )
-
-      return conversation
-    },
+  const query = useLiveQuery({
+    query: (q) =>
+      q
+        .from({ conversation: conversationsCollection })
+        .where(({ conversation }) => eq(conversation.name, name))
+        .findOne(),
   })
-
-  return { data, error, isPending, isError }
+  return {
+    data: query.data,
+    ...databaseQueryState(query, query.data !== undefined),
+  }
 }

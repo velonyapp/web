@@ -3,7 +3,7 @@ import { Geist_Mono, Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/provider/theme-provider"
 import { cn } from "@/lib/utils"
-import { QueryProvider } from "@/components/provider/query-provider"
+import { DatabaseProvider } from "@/components/provider/database-provider"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -50,7 +50,7 @@ export default function RootLayout({
     >
       <body>
         <ThemeProvider>
-          <QueryProvider>{children}</QueryProvider>
+          <DatabaseProvider>{children}</DatabaseProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -1,20 +1,19 @@
-import { useQuery } from "@tanstack/react-query"
-import { getUser } from "@/features/users/api/get-user"
-import { User } from "@/features/users/schemas/user"
+"use client"
+
+import { eq, useLiveQuery } from "@tanstack/react-db"
+import { usersCollection } from "@/features/users/collections/users"
+import { databaseQueryState } from "@/lib/database/query-state"
 
 export function useUser(name: string) {
-  const { data, error, isPending, isError } = useQuery({
-    queryKey: [name],
-    queryFn: async ({ client }) => {
-      const user = await getUser(name)
-
-      client.setQueryData<User[]>(["users"], (old) =>
-        old?.map((item) => (item.name === user.name ? user : item))
-      )
-
-      return user
-    },
+  const query = useLiveQuery({
+    query: (q) =>
+      q
+        .from({ user: usersCollection })
+        .where(({ user }) => eq(user.name, name))
+        .findOne(),
   })
-
-  return { data, error, isPending, isError }
+  return {
+    data: query.data,
+    ...databaseQueryState(query, query.data !== undefined),
+  }
 }

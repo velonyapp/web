@@ -1,15 +1,20 @@
-import { useQuery } from "@tanstack/react-query"
-import { listMessages } from "@/features/messages/api/list-messages"
+"use client"
+
+import { eq, useLiveQuery } from "@tanstack/react-db"
+import { messagesCollection } from "@/features/messages/collections/messages"
+import { databaseQueryState } from "@/lib/database/query-state"
 
 export function useMessageList(conversationName: string) {
-  const { data, error, isPending, isError } = useQuery({
-    queryKey: [`${conversationName}/messages`],
-    queryFn: async () => {
-      const messages = await listMessages(conversationName)
-
-      return messages
-    },
+  const query = useLiveQuery({
+    query: (q) =>
+      q
+        .from({ message: messagesCollection })
+        .where(({ message }) => eq(message.conversation, conversationName))
+        .orderBy(({ message }) => message.createTime, "asc")
+        .orderBy(({ message }) => message.name, "asc"),
   })
-
-  return { data, error, isPending, isError }
+  return {
+    data: query.data,
+    ...databaseQueryState(query, query.data.length > 0),
+  }
 }
