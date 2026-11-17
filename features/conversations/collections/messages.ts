@@ -1,15 +1,16 @@
-import { BasicIndex, collectionOptions } from "@tanstack/react-db"
+import {
+  BasicIndex,
+  collectionOptions,
+  parseLoadSubsetOptions,
+} from "@tanstack/react-db"
 import { QueryClient } from "@tanstack/query-core"
 import { queryCollectionOptions } from "@tanstack/query-db-collection"
-import { loadIds, valuesFor } from "@/lib/database/load-subset"
 
 import { batchGetMessages } from "@/features/conversations/api/batch-get-messages"
-import { getMessage } from "@/features/conversations/api/get-message"
 import { listMessages } from "@/features/conversations/api/list-messages"
 import type { Message } from "@/features/conversations/types/message"
 
-const api = { batchGetMessages, getMessage, listMessages }
-export type MessagesApi = typeof api
+const api = { batchGetMessages, listMessages }
 
 export const messagesCollection = collectionOptions("messages", (client) =>
   queryCollectionOptions<Message>({
@@ -21,32 +22,63 @@ export const messagesCollection = collectionOptions("messages", (client) =>
     queryKey: ["messages"],
     queryClient: client.requireDependency<QueryClient>("queryClient"),
     queryFn: async ({ meta }): Promise<Message[]> => {
-      const source = client.getDependency<MessagesApi>("messagesApi") ?? api
       const options = meta?.loadSubsetOptions
+      const { filters } = parseLoadSubsetOptions(meta?.loadSubsetOptions)
 
-      const ids = valuesFor(options, "id")
-      if (ids !== undefined) {
-        return loadIds(
-          ids,
-          client.collection(messagesCollection),
-          (missing) =>
-            missing.length === 1
-              ? source.getMessage(missing[0]).then((message) => [message])
-              : source.batchGetMessages(missing),
-          options?.refetch
-        )
-      }
+      if (filters.length === 1 && filters[0].field.join(".") === "id") {
+        const { operator, value } = filters[0]
 
-      const conversationIds = valuesFor(options, "conversationId")
-      if (conversationIds !== undefined) {
-        return (
-          await Promise.all(
-            conversationIds.map((id) => source.listMessages(id))
+        if (operator === "in") {
+          const ids: string[] = value
+
+          const messageMap = new Map<string, Message>()
+
+          if (!options?.refetch) {
+            for (const id of ids) {
+              const message = client.collection(messagesCollection).get(id)
+              if (message === undefined) {
+                continue
+              }
+
+              messageMap.set(id, message)
+            }
+          }
+
+          const missingIds = Array.from(
+            new Set(ids.filter((id) => !messageMap.has(id)))
           )
-        ).flat()
+          if (missingIds.length > 0) {
+            const messages = await api.batchGetMessages(missingIds)
+            for (const message of messages) {
+              messageMap.set(message.id, message)
+            }
+          }
+
+          return ids.map((id) => {
+            const message = messageMap.get(id)
+            if (message === undefined) {
+              throw new Error("Unsupported query")
+            }
+
+            return message
+          })
+        }
       }
 
-      throw new Error("Messages require IDs or a conversation ID")
+      if (
+        filters.length === 1 &&
+        filters[0].field.join(".") === "conversationId"
+      ) {
+        const { operator, value } = filters[0]
+
+        if (operator === "eq") {
+          const conversationId: string = value
+
+          return api.listMessages(conversationId)
+        }
+      }
+
+      throw new Error("Unsupported query")
     },
   })
 )
