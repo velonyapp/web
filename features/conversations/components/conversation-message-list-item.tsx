@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/message"
 import { MessageScrollerItem } from "@/components/ui/message-scroller"
 import { Skeleton } from "@/components/ui/skeleton"
-import { type Message as MessageX } from "@/features/conversations/schemas/message"
-import { type User } from "@/features/identity/schemas/user"
+import type { Message as MessageX } from "@/features/conversations/types/message"
+import type { User } from "@/features/identity/types/user"
 import { UserRoundIcon, UserRoundXIcon } from "lucide-react"
 import { cn } from "cn"
 
@@ -34,7 +34,7 @@ export function ConversationMessageListItem({
   mergeWithPrevious = false,
   ...props
 }: ConversationMessageListItemProps) {
-  const isUserPending = message.user !== undefined && user === undefined
+  const isUserPending = message.userId != null && user === undefined
 
   return (
     <MessageScrollerItem {...props}>
@@ -52,11 +52,14 @@ export function ConversationMessageListItem({
               <Skeleton className="size-full rounded-full" />
             ) : (
               <>
-                <AvatarImage src={user?.avatar_url} alt={user?.username} />
+                <AvatarImage
+                  src={user?.avatarUrl ?? undefined}
+                  alt={user?.username}
+                />
                 <AvatarFallback
                   className={cn(
                     user
-                      ? getAvatarColor(user.name)
+                      ? getAvatarColor(user.id)
                       : "bg-zinc-500/15 text-zinc-400"
                   )}
                 >

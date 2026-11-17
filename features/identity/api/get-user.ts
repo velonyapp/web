@@ -1,11 +1,11 @@
+import { toUser } from "@/features/identity/api/mappers"
 import { sampleUsers } from "@/features/identity/samples/users"
+import type { User } from "@/features/identity/types/user"
 
-export async function getUser(name: string) {
+export async function getUser(id: string): Promise<User> {
   await new Promise((resolve) => setTimeout(resolve, 500))
 
-  const user = sampleUsers.get(name)
-  if (!user) {
-    throw new Error(`User not found: ${name}`)
-  }
-  return user
+  const user = sampleUsers.get(`users/${id}`)
+  if (!user) throw new Error(`User not found: ${id}`)
+  return toUser(user)
 }

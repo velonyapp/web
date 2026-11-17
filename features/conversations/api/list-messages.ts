@@ -1,15 +1,17 @@
+import { toMessage } from "@/features/conversations/api/mappers"
 import { sampleMessages } from "@/features/conversations/samples/messages"
+import type { Message } from "@/features/conversations/types/message"
 
-export async function listMessages(conversationName: string) {
+export async function listMessages(conversationId: string): Promise<Message[]> {
   await new Promise((resolve) => setTimeout(resolve, 500))
 
-  const collectionName = `${conversationName}/messages`
-
+  const prefix = `conversations/${conversationId}/messages/`
   return [...sampleMessages.values()]
-    .filter((message) => message.name.startsWith(`${collectionName}/`))
+    .filter((message) => message.name.startsWith(prefix))
+    .map(toMessage)
     .sort(
       (a, b) =>
         a.createTime.getTime() - b.createTime.getTime() ||
-        a.name.localeCompare(b.name)
+        a.id.localeCompare(b.id)
     )
 }

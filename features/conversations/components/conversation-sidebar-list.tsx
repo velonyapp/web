@@ -6,8 +6,8 @@ import { useConversationList } from "@/features/conversations/hooks/use-conversa
 import { ConversationSidebarListItem } from "@/features/conversations/components/conversation-sidebar-list-item"
 import { useMessageBatch } from "@/features/conversations/hooks/use-message-batch"
 import { useUserBatch } from "@/features/identity/hooks/use-user-batch"
-import { type Message } from "@/features/conversations/schemas/message"
-import { type User } from "@/features/identity/schemas/user"
+import type { Message } from "@/features/conversations/types/message"
+import type { User } from "@/features/identity/types/user"
 
 export function ConversationSidebarList({
   ...props
@@ -24,7 +24,7 @@ export function ConversationSidebarList({
     isError: isMessageBatchError,
   } = useMessageBatch(
     conversationList
-      ?.map((conversation) => conversation.lastMessage)
+      ?.map((conversation) => conversation.lastMessageId)
       .filter((message) => message != null) ?? []
   )
   const {
@@ -33,7 +33,7 @@ export function ConversationSidebarList({
     isError: isUserBatchError,
   } = useUserBatch(
     Array.from(messageBatch?.values() ?? [])
-      .map((message) => message.user)
+      .map((message) => message.userId)
       .filter((user): user is string => user != null)
   )
 
@@ -63,17 +63,17 @@ export function ConversationSidebarList({
         let lastMessage: Message | undefined = undefined
         let lastMessageUser: User | undefined = undefined
 
-        if (conversation.lastMessage !== undefined) {
-          lastMessage = messageBatch?.get(conversation.lastMessage)
+        if (conversation.lastMessageId != null) {
+          lastMessage = messageBatch?.get(conversation.lastMessageId)
 
-          if (lastMessage?.user != undefined) {
-            lastMessageUser = userBatch?.get(lastMessage.user)
+          if (lastMessage?.userId != null) {
+            lastMessageUser = userBatch?.get(lastMessage.userId)
           }
         }
 
         return (
           <ConversationSidebarListItem
-            key={conversation.name}
+            key={conversation.id}
             conversation={conversation}
             lastMessage={lastMessage}
             lastMessageUser={lastMessageUser}

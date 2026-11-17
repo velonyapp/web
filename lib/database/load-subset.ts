@@ -25,23 +25,23 @@ export function valuesFor(
 }
 
 // A keyed load returns known normalized rows and asks the API only for missing ones.
-export async function loadNames<T extends { name: string }>(
-  names: string[],
-  collection: { get(name: string): T | undefined },
-  load: (names: string[]) => Promise<T[]>,
+export async function loadIds<T extends { id: string }>(
+  ids: string[],
+  collection: { get(id: string): T | undefined },
+  load: (ids: string[]) => Promise<T[]>,
   refetch = false
 ): Promise<T[]> {
   const known = new Map<string, T>()
-  for (const name of names) {
-    const row = refetch ? undefined : collection.get(name)
-    if (row) known.set(name, row)
+  for (const id of ids) {
+    const row = refetch ? undefined : collection.get(id)
+    if (row) known.set(id, row)
   }
-  const missing = names.filter((name) => !known.has(name))
+  const missing = ids.filter((id) => !known.has(id))
   if (missing.length) {
-    for (const row of await load(missing)) known.set(row.name, row)
+    for (const row of await load(missing)) known.set(row.id, row)
   }
-  return names.flatMap((name) => {
-    const row = known.get(name)
+  return ids.flatMap((id) => {
+    const row = known.get(id)
     return row ? [row] : []
   })
 }

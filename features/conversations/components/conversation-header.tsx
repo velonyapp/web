@@ -6,11 +6,11 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useConversation } from "../hooks/use-conversation"
 
 type ConversationHeaderProps = React.ComponentProps<"div"> & {
-  name: string
+  conversationId: string
 }
 
 export function ConversationHeader({
-  name,
+  conversationId,
   className,
   ...props
 }: ConversationHeaderProps) {
@@ -19,7 +19,7 @@ export function ConversationHeader({
     error,
     isPending,
     isError,
-  } = useConversation(name)
+  } = useConversation(conversationId)
 
   if (isError) {
     throw error
@@ -35,7 +35,7 @@ export function ConversationHeader({
     >
       {conversation ? (
         <Avatar size="lg">
-          <AvatarImage src={conversation.avatar_url} alt="Avatar" />
+          <AvatarImage src={conversation.avatarUrl ?? undefined} alt="Avatar" />
           <AvatarFallback
             className={cn("font-medium", getAvatarColor(conversation.title))}
           >
@@ -99,10 +99,10 @@ const avatarColors = [
   "bg-slate-500/15 text-slate-300",
 ]
 
-function getAvatarColor(name: string) {
+function getAvatarColor(conversationId: string) {
   let hash = 0
 
-  for (const char of name) {
+  for (const char of conversationId) {
     hash = (hash * 31 + char.codePointAt(0)!) | 0
   }
 

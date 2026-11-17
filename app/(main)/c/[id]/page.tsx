@@ -14,8 +14,8 @@ export default function ConversationPage({ params }: ConversationPageProps) {
 
   return (
     <main className="flex h-dvh min-h-0 flex-col">
-      <ConversationHeader name={`conversations/${id}`} />
-      <ConversationMessageList name={`conversations/${id}`} />
+      <ConversationHeader conversationId={id} />
+      <ConversationMessageList conversationId={id} />
       <ConversationMessageInput />
     </main>
   )

@@ -5,22 +5,22 @@ import { inArray, useLiveQuery } from "@tanstack/react-db"
 import { usersCollection } from "@/features/identity/collections/users"
 import { databaseQueryState } from "@/lib/database/query-state"
 
-export function useUserBatch(names: string[]) {
-  const uniqueNames = [...new Set(names)].sort()
+export function useUserBatch(ids: string[]) {
+  const uniqueIds = [...new Set(ids)].sort()
   const query = useLiveQuery({
     query: (q) =>
-      uniqueNames.length
+      uniqueIds.length
         ? q
             .from({ user: usersCollection })
-            .where(({ user }) => inArray(user.name, uniqueNames))
+            .where(({ user }) => inArray(user.id, uniqueIds))
         : undefined,
   })
   const data = useMemo(
-    () => new Map(query.data?.map((user) => [user.name, user])),
+    () => new Map(query.data?.map((user) => [user.id, user])),
     [query.data]
   )
   return {
     data,
-    ...databaseQueryState(query, data.size === uniqueNames.length),
+    ...databaseQueryState(query, data.size === uniqueIds.length),
   }
 }

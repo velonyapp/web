@@ -3,9 +3,9 @@
 import * as React from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
-import { type Conversation } from "@/features/conversations/schemas/conversation"
-import { type Message } from "@/features/conversations/schemas/message"
-import { type User } from "@/features/identity/schemas/user"
+import type { Conversation } from "@/features/conversations/types/conversation"
+import type { Message } from "@/features/conversations/types/message"
+import type { User } from "@/features/identity/types/user"
 import { cn } from "cn"
 import Link from "next/link"
 
@@ -22,9 +22,9 @@ export function ConversationSidebarListItem({
   ...props
 }: ConversationSidebarListItemProps) {
   const isMessagePending =
-    conversation?.lastMessage !== undefined && lastMessage === undefined
+    conversation?.lastMessageId != null && lastMessage === undefined
   const isUserPending =
-    lastMessage?.user !== undefined && lastMessageUser === undefined
+    lastMessage?.userId != null && lastMessageUser === undefined
 
   const content = (
     <div
@@ -37,7 +37,7 @@ export function ConversationSidebarListItem({
     >
       {conversation ? (
         <Avatar size="lg">
-          <AvatarImage src={conversation.avatar_url} alt="Avatar" />
+          <AvatarImage src={conversation.avatarUrl ?? undefined} alt="Avatar" />
           <AvatarFallback
             className={cn("font-medium", getAvatarColor(conversation.title))}
           >
@@ -85,7 +85,7 @@ export function ConversationSidebarListItem({
   if (!conversation) return content
 
   return (
-    <Link href={`/c/${conversation.name.split("/").pop()}`} className="block">
+    <Link href={`/c/${conversation.id}`} className="block">
       {content}
     </Link>
   )

@@ -14,11 +14,11 @@ import { useUserBatch } from "@/features/identity/hooks/use-user-batch"
 import { ConversationMessageListItem } from "./conversation-message-list-item"
 
 type ConversationMessageListProps = React.ComponentProps<"div"> & {
-  name: string
+  conversationId: string
 }
 
 export function ConversationMessageList({
-  name,
+  conversationId,
   ...props
 }: ConversationMessageListProps) {
   const {
@@ -26,7 +26,7 @@ export function ConversationMessageList({
     error: messageListError,
     isPending: isMessageListPending,
     isError: isMessageListError,
-  } = useMessageList(name)
+  } = useMessageList(conversationId)
 
   const {
     data: userBatch,
@@ -34,8 +34,8 @@ export function ConversationMessageList({
     isError: isUserBatchError,
   } = useUserBatch(
     messageList
-      ?.map((message) => message.user)
-      .filter((user) => user !== undefined) ?? []
+      ?.map((message) => message.userId)
+      .filter((user) => user !== null) ?? []
   )
 
   if (isMessageListError) {
@@ -61,20 +61,20 @@ export function ConversationMessageList({
 
                   return (
                     <ConversationMessageListItem
-                      key={message.name}
-                      messageId={message.name}
+                      key={message.id}
+                      messageId={message.id}
                       message={message}
-                      user={userBatch?.get(message.user ?? "")}
+                      user={userBatch?.get(message.userId ?? "")}
                       mergeWithPrevious={
-                        message.user !== undefined &&
-                        previousMessage?.user === message.user &&
+                        message.userId != null &&
+                        previousMessage?.userId === message.userId &&
                         Math.floor(
                           previousMessage.createTime.getTime() / 60000
                         ) === minute
                       }
                       mergeWithNext={
-                        message.user !== undefined &&
-                        nextMessage?.user === message.user &&
+                        message.userId != null &&
+                        nextMessage?.userId === message.userId &&
                         Math.floor(nextMessage.createTime.getTime() / 60000) ===
                           minute
                       }
