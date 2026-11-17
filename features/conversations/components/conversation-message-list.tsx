@@ -9,8 +9,8 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@/components/ui/message-scroller"
-import { useMessageList } from "@/features/messages/hooks/use-message-list"
-import { useUserBatch } from "@/features/users/hooks/use-user-batch"
+import { useMessageList } from "@/features/conversations/hooks/use-message-list"
+import { useUserBatch } from "@/features/identity/hooks/use-user-batch"
 import { ConversationMessageListItem } from "./conversation-message-list-item"
 
 type ConversationMessageListProps = React.ComponentProps<"div"> & {

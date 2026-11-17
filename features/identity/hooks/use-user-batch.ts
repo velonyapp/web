@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { inArray, useLiveQuery } from "@tanstack/react-db"
-import { usersCollection } from "@/features/users/collections/users"
+import { usersCollection } from "@/features/identity/collections/users"
 import { databaseQueryState } from "@/lib/database/query-state"
 
 export function useUserBatch(names: string[]) {

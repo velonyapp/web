@@ -3,7 +3,7 @@ import * as z from "zod"
 import {
   MessageSchema,
   type Message,
-} from "@/features/messages/schemas/message"
+} from "@/features/conversations/schemas/message"
 
 export const sampleMessages = z.map(z.string(), MessageSchema).parse(
   new Map<string, Message>([

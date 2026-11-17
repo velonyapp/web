@@ -1,7 +1,7 @@
 "use client"
 
 import { eq, useLiveQuery } from "@tanstack/react-db"
-import { messagesCollection } from "@/features/messages/collections/messages"
+import { messagesCollection } from "@/features/conversations/collections/messages"
 import { databaseQueryState } from "@/lib/database/query-state"
 
 export function useMessageList(conversationName: string) {

@@ -4,12 +4,12 @@ import { queryCollectionOptions } from "@tanstack/query-db-collection"
 import { loadNames, valuesFor } from "@/lib/database/load-subset"
 
 import { z } from "zod"
-import { batchGetMessages } from "@/features/messages/api/batch-get-messages"
-import { listMessages } from "@/features/messages/api/list-messages"
+import { batchGetMessages } from "@/features/conversations/api/batch-get-messages"
+import { listMessages } from "@/features/conversations/api/list-messages"
 import {
   MessageSchema,
   type Message,
-} from "@/features/messages/schemas/message"
+} from "@/features/conversations/schemas/message"
 
 const api = { batchGetMessages, listMessages }
 export type MessagesApi = typeof api

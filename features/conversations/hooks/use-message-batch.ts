@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { inArray, useLiveQuery } from "@tanstack/react-db"
-import { messagesCollection } from "@/features/messages/collections/messages"
+import { messagesCollection } from "@/features/conversations/collections/messages"
 import { databaseQueryState } from "@/lib/database/query-state"
 
 export function useMessageBatch(names: string[]) {

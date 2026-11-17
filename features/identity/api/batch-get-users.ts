@@ -1,4 +1,4 @@
-import { sampleUsers } from "@/lib/samples/users"
+import { sampleUsers } from "@/features/identity/samples/users"
 
 export async function batchGetUsers(names: string[]) {
   await new Promise((resolve) => setTimeout(resolve, 500))

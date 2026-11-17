@@ -1,4 +1,4 @@
-import { sampleConversations } from "@/lib/samples/conversations"
+import { sampleConversations } from "@/features/conversations/samples/conversations"
 
 export async function getConversation(name: string) {
   await new Promise((resolve) => setTimeout(resolve, 500))

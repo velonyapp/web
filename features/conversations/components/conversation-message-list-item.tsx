@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/message"
 import { MessageScrollerItem } from "@/components/ui/message-scroller"
 import { Skeleton } from "@/components/ui/skeleton"
-import { type Message as MessageX } from "@/features/messages/schemas/message"
-import { type User } from "@/features/users/schemas/user"
+import { type Message as MessageX } from "@/features/conversations/schemas/message"
+import { type User } from "@/features/identity/schemas/user"
 import { UserRoundIcon, UserRoundXIcon } from "lucide-react"
 import { cn } from "cn"
 

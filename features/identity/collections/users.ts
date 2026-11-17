@@ -3,9 +3,9 @@ import { QueryClient } from "@tanstack/query-core"
 import { queryCollectionOptions } from "@tanstack/query-db-collection"
 import { loadNames, valuesFor } from "@/lib/database/load-subset"
 
-import { batchGetUsers } from "@/features/users/api/batch-get-users"
-import { getUser } from "@/features/users/api/get-user"
-import { UserSchema, type User } from "@/features/users/schemas/user"
+import { batchGetUsers } from "@/features/identity/api/batch-get-users"
+import { getUser } from "@/features/identity/api/get-user"
+import { UserSchema, type User } from "@/features/identity/schemas/user"
 
 const api = { batchGetUsers, getUser }
 export type UsersApi = typeof api

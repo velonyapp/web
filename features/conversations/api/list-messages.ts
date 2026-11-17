@@ -1,4 +1,4 @@
-import { sampleMessages } from "@/lib/samples/messages"
+import { sampleMessages } from "@/features/conversations/samples/messages"
 
 export async function listMessages(conversationName: string) {
   await new Promise((resolve) => setTimeout(resolve, 500))

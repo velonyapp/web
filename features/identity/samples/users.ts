@@ -1,6 +1,6 @@
 import * as z from "zod"
 
-import { UserSchema, type User } from "@/features/users/schemas/user"
+import { UserSchema, type User } from "@/features/identity/schemas/user"
 
 export const sampleUsers = z.map(z.string(), UserSchema).parse(
   new Map<string, User>([

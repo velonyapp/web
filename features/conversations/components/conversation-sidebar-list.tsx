@@ -4,10 +4,10 @@ import * as React from "react"
 
 import { useConversationList } from "@/features/conversations/hooks/use-conversationList"
 import { ConversationSidebarListItem } from "@/features/conversations/components/conversation-sidebar-list-item"
-import { useMessageBatch } from "@/features/messages/hooks/use-message-batch"
-import { useUserBatch } from "@/features/users/hooks/use-user-batch"
-import { type Message } from "@/features/messages/schemas/message"
-import { type User } from "@/features/users/schemas/user"
+import { useMessageBatch } from "@/features/conversations/hooks/use-message-batch"
+import { useUserBatch } from "@/features/identity/hooks/use-user-batch"
+import { type Message } from "@/features/conversations/schemas/message"
+import { type User } from "@/features/identity/schemas/user"
 
 export function ConversationSidebarList({
   ...props
