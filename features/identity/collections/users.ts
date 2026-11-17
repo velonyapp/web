@@ -31,14 +31,7 @@ export const usersCollection = collectionOptions("users", (client) =>
         if (operator === "eq") {
           const id: string = value
 
-          if (!options?.refetch) {
-            const user = client.collection(usersCollection).get(id)
-            if (user) {
-              return [user]
-            }
-          }
-
-          const user = await api.getUser(value)
+          const user = await api.getUser(id)
           return [user]
         }
 
