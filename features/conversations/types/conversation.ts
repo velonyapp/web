@@ -1,7 +1,7 @@
 export type Conversation = {
   id: string
   title: string
-  description: string | null
+  description: string
   avatarUrl: string | null
   lastMessageId: string | null
   createTime: Date

@@ -13,7 +13,7 @@ export function toConversation(data: unknown): Conversation {
   return {
     id: conversationName.match(conversation.name).conversation.toString(),
     title: conversation.title,
-    description: conversation.description ?? null,
+    description: conversation.description,
     avatarUrl: conversation.avatarUrl ?? null,
     lastMessageId:
       conversation.lastMessage == null
