@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-import { useConversationList } from "@/features/conversations/hooks/use-conversationList"
+import { useConversationList } from "@/features/conversations/hooks/use-conversation-list"
 import { ConversationSidebarListItem } from "@/features/conversations/components/conversation-sidebar-list-item"
 import { useMessageBatch } from "@/features/conversations/hooks/use-message-batch"
 import { useUserBatch } from "@/features/identity/hooks/use-user-batch"
