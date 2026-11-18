@@ -9,8 +9,9 @@ import { queryCollectionOptions } from "@tanstack/query-db-collection"
 import { batchGetMessages } from "@/features/conversations/api/batch-get-messages"
 import { listMessages } from "@/features/conversations/api/list-messages"
 import type { Message } from "@/features/conversations/types/message"
+import { getMessage } from "@/features/conversations/api/get-message"
 
-const api = { batchGetMessages, listMessages }
+const api = { getMessage, batchGetMessages, listMessages }
 
 export const messagesCollection = collectionOptions("messages", (client) =>
   queryCollectionOptions<Message>({
@@ -27,6 +28,20 @@ export const messagesCollection = collectionOptions("messages", (client) =>
 
       if (filters.length === 1 && filters[0].field.join(".") === "id") {
         const { operator, value } = filters[0]
+
+        if (operator === "eq") {
+          const id: string = value
+
+          if (!options?.refetch) {
+            const message = client.collection(messagesCollection).get(id)
+            if (message) {
+              return [message]
+            }
+          }
+
+          const message = await api.getMessage(value)
+          return [message]
+        }
 
         if (operator === "in") {
           const ids: string[] = value
