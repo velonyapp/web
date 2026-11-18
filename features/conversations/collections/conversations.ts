@@ -38,7 +38,16 @@ export const conversationsCollection = collectionOptions(
           if (operator === "eq") {
             const id: string = value
 
-            const conversation = await api.getConversation(id)
+            if (!options?.refetch) {
+              const conversation = client
+                .collection(conversationsCollection)
+                .get(id)
+              if (conversation) {
+                return [conversation]
+              }
+            }
+
+            const conversation = await api.getConversation(value)
             return [conversation]
           }
 
