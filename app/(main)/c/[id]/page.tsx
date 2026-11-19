@@ -16,7 +16,7 @@ export default function ConversationPage({ params }: ConversationPageProps) {
     <main className="flex h-dvh min-h-0 flex-col">
       <ConversationHeader conversationId={id} />
       <ConversationMessageList conversationId={id} />
-      <ConversationMessageInput />
+      <ConversationMessageInput key={id} conversationId={id} />
     </main>
   )
 }

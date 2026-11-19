@@ -7,11 +7,12 @@ import { QueryClient } from "@tanstack/query-core"
 import { queryCollectionOptions } from "@tanstack/query-db-collection"
 
 import { batchGetMessages } from "@/features/conversations/api/batch-get-messages"
+import { createMessage } from "@/features/conversations/api/create-message"
 import { listMessages } from "@/features/conversations/api/list-messages"
 import type { Message } from "@/features/conversations/types/message"
 import { getMessage } from "@/features/conversations/api/get-message"
 
-const api = { getMessage, batchGetMessages, listMessages }
+const api = { getMessage, batchGetMessages, listMessages, createMessage }
 
 export const messagesCollection = collectionOptions("messages", (client) =>
   queryCollectionOptions<Message>({
@@ -22,6 +23,19 @@ export const messagesCollection = collectionOptions("messages", (client) =>
     syncMode: "on-demand",
     queryKey: ["messages"],
     queryClient: client.requireDependency<QueryClient>("queryClient"),
+    onInsert: async ({ transaction, collection }) => {
+      await Promise.all(
+        transaction.mutations.map(async ({ modified }) => {
+          const message = await api.createMessage(
+            modified.conversationId,
+            modified.id,
+            modified.userId!,
+            modified.content
+          )
+          await collection.utils.writeUpsert(message)
+        })
+      )
+    },
     queryFn: async ({ meta }): Promise<Message[]> => {
       const options = meta?.loadSubsetOptions
       const { filters } = parseLoadSubsetOptions(meta?.loadSubsetOptions)

@@ -3,6 +3,7 @@ export type Message = {
   conversationId: string
   userId: string | null
   content: string
+  state: "creating" | "editing" | "deleting" | "ready"
   createTime: Date
   updateTime: Date
 }

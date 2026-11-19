@@ -36,7 +36,7 @@ export function ConversationMessageListItem({
 
   return (
     <MessageScrollerItem {...props}>
-      <Message>
+      <Message className={message.state === "ready" ? undefined : "opacity-70"}>
         <MessageAvatar
           className={cn(
             "self-start group-has-data-[slot=message-footer]/message:translate-y-0",
@@ -45,7 +45,10 @@ export function ConversationMessageListItem({
               : "mt-2"
           )}
         >
-          <ConversationMessageUserAvatar user={user} isPending={isUserPending} />
+          <ConversationMessageUserAvatar
+            user={user}
+            isPending={isUserPending}
+          />
         </MessageAvatar>
 
         <MessageContent className="gap-0">

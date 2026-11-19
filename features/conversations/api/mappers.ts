@@ -35,6 +35,7 @@ export function toMessage(data: unknown): Message {
         ? null
         : userName.match(message.user).user.toString(),
     content: message.content,
+    state: "ready",
     createTime: message.createTime,
     updateTime: message.updateTime,
   }
