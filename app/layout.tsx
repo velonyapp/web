@@ -4,6 +4,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/provider/theme-provider"
 import { cn } from "@/lib/utils"
 import { DatabaseProvider } from "@/components/provider/database-provider"
+import { QueryProvider } from "@/components/provider/query-provider"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -50,7 +51,9 @@ export default function RootLayout({
     >
       <body>
         <ThemeProvider>
-          <DatabaseProvider>{children}</DatabaseProvider>
+          <QueryProvider>
+            <DatabaseProvider>{children}</DatabaseProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

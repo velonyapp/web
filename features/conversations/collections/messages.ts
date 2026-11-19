@@ -87,9 +87,25 @@ export const messagesCollection = collectionOptions("messages", (client) =>
         const { operator, value } = filters[0]
 
         if (operator === "eq") {
+          const collection = client.collection(messagesCollection)
+
           const conversationId: string = value
 
-          return api.listMessages(conversationId)
+          const index = [...collection.indexes.values()].find((index) =>
+            index.matchesField(["conversationId"])
+          )
+
+          if (index !== undefined) {
+            const ids = [...index.lookup("eq", conversationId)]
+
+            return ids
+              .map((id) => collection.get(id))
+              .filter((message) => message !== undefined)
+          }
+
+          return collection.toArray.filter(
+            (message) => message.conversationId === conversationId
+          )
         }
       }
 
