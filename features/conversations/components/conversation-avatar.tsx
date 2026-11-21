@@ -24,18 +24,28 @@ const AVATAR_COLORS = [
 
 type ConversationAvatarProps = {
   conversation?: Conversation
+  size?: number
 }
 
-export function ConversationAvatar({ conversation }: ConversationAvatarProps) {
+export function ConversationAvatar({
+  conversation,
+  size,
+}: ConversationAvatarProps) {
+  const dimensions =
+    size === undefined ? undefined : { width: size, height: size }
+
   if (!conversation) {
-    return <Skeleton className="size-10 shrink-0 rounded-full" />
+    return (
+      <Skeleton className="size-10 shrink-0 rounded-full" style={dimensions} />
+    )
   }
 
   return (
-    <Avatar size="lg">
+    <Avatar size="lg" style={dimensions}>
       <AvatarImage src={conversation.avatarUrl ?? undefined} alt="Avatar" />
       <AvatarFallback
         className={cn("font-medium", avatarColor(conversation.id))}
+        style={size === undefined ? undefined : { fontSize: size * 0.35 }}
       >
         {avatarInitials(conversation.title)}
       </AvatarFallback>
