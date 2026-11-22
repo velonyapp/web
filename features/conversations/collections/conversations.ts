@@ -6,12 +6,12 @@ import {
 import { QueryClient } from "@tanstack/query-core"
 import { queryCollectionOptions } from "@tanstack/query-db-collection"
 
-import { batchGetConversations } from "@/features/conversations/api/batch-get-conversations"
+import { lookupConversations } from "@/features/conversations/api/lookup-conversations"
 import { getConversation } from "@/features/conversations/api/get-conversation"
 import { listConversations } from "@/features/conversations/api/list-conversations"
 import type { Conversation } from "@/features/conversations/types/conversation"
 
-const api = { batchGetConversations, getConversation, listConversations }
+const api = { lookupConversations, getConversation, listConversations }
 
 export const conversationsCollection = collectionOptions(
   "conversations",
@@ -73,20 +73,15 @@ export const conversationsCollection = collectionOptions(
               new Set(ids.filter((id) => !conversationMap.has(id)))
             )
             if (missingIds.length > 0) {
-              const conversations = await api.batchGetConversations(missingIds)
-              for (const conversation of conversations) {
+              const conversations = await api.lookupConversations(missingIds)
+              for (const conversation of conversations.values()) {
                 conversationMap.set(conversation.id, conversation)
               }
             }
 
-            return ids.map((id) => {
-              const conversation = conversationMap.get(id)
-              if (conversation === undefined) {
-                throw new Error("Unsupported query")
-              }
-
-              return conversation
-            })
+            return ids
+              .map((id) => conversationMap.get(id))
+              .filter((conversation) => conversation !== undefined)
           }
         }
 

@@ -6,11 +6,11 @@ import {
 import { QueryClient } from "@tanstack/query-core"
 import { queryCollectionOptions } from "@tanstack/query-db-collection"
 
-import { batchGetUsers } from "@/features/identity/api/batch-get-users"
+import { lookupUsers } from "@/features/identity/api/lookup-users"
 import { getUser } from "@/features/identity/api/get-user"
 import type { User } from "@/features/identity/types/user"
 
-const api = { batchGetUsers, getUser }
+const api = { lookupUsers, getUser }
 
 export const usersCollection = collectionOptions("users", (client) =>
   queryCollectionOptions<User>({
@@ -62,20 +62,15 @@ export const usersCollection = collectionOptions("users", (client) =>
             new Set(ids.filter((id) => !userMap.has(id)))
           )
           if (missingIds.length > 0) {
-            const users = await api.batchGetUsers(missingIds)
-            for (const user of users) {
+            const users = await api.lookupUsers(missingIds)
+            for (const user of users.values()) {
               userMap.set(user.id, user)
             }
           }
 
-          return ids.map((id) => {
-            const user = userMap.get(id)
-            if (user === undefined) {
-              throw new Error("Unsupported query")
-            }
-
-            return user
-          })
+          return ids
+            .map((id) => userMap.get(id))
+            .filter((user) => user !== undefined)
         }
       }
 
