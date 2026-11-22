@@ -4,7 +4,7 @@ import * as React from "react"
 
 import { useConversationList } from "@/features/conversations/hooks/use-conversation-list"
 import { ConversationSidebarListItem } from "@/features/conversations/components/conversation-sidebar-list-item"
-import { useMessageBatch } from "@/features/conversations/hooks/use-message-batch"
+import { useConversationLastMessageBatch } from "@/features/conversations/hooks/use-conversation-last-message-batch"
 import { useUserBatch } from "@/features/identity/hooks/use-user-batch"
 import type { Message } from "@/features/conversations/types/message"
 import type { User } from "@/features/identity/types/user"
@@ -19,20 +19,18 @@ export function ConversationSidebarList({
     isError: isConversationListError,
   } = useConversationList()
   const {
-    data: messageBatch,
-    error: messageBatchError,
-    isError: isMessageBatchError,
-  } = useMessageBatch(
-    conversationList
-      ?.map((conversation) => conversation.lastMessageId)
-      .filter((message) => message != null) ?? []
+    data: conversationLastMessageBatch,
+    error: conversationLastMessageBatchError,
+    isError: isConversationLastMessageBatchError,
+  } = useConversationLastMessageBatch(
+    conversationList?.map((conversation) => conversation.id) ?? []
   )
   const {
     data: userBatch,
     error: userBatchError,
     isError: isUserBatchError,
   } = useUserBatch(
-    Array.from(messageBatch?.values() ?? [])
+    Array.from(conversationLastMessageBatch?.values() ?? [])
       .map((message) => message.userId)
       .filter((user): user is string => user != null)
   )
@@ -40,8 +38,8 @@ export function ConversationSidebarList({
   if (isConversationListError) {
     throw conversationListError
   }
-  if (isMessageBatchError) {
-    throw messageBatchError
+  if (isConversationLastMessageBatchError) {
+    throw conversationLastMessageBatchError
   }
   if (isUserBatchError) {
     throw userBatchError
@@ -63,8 +61,8 @@ export function ConversationSidebarList({
         let lastMessage: Message | undefined = undefined
         let lastMessageUser: User | undefined = undefined
 
-        if (conversation.lastMessageId != null) {
-          lastMessage = messageBatch?.get(conversation.lastMessageId)
+        if (conversationLastMessageBatch?.has(conversation.id)) {
+          lastMessage = conversationLastMessageBatch.get(conversation.id)
 
           if (lastMessage?.userId != null) {
             lastMessageUser = userBatch?.get(lastMessage.userId)

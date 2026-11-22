@@ -121,6 +121,28 @@ export const messagesCollection = collectionOptions("messages", (client) =>
             (message) => message.conversationId === conversationId
           )
         }
+
+        if (operator === "in") {
+          const collection = client.collection(messagesCollection)
+
+          const conversationIds: string[] = value
+
+          const index = [...collection.indexes.values()].find((index) =>
+            index.matchesField(["conversationId"])
+          )
+
+          if (index !== undefined) {
+            const ids = [...index.lookup("in", conversationIds)]
+
+            return ids
+              .map((id) => collection.get(id))
+              .filter((message) => message !== undefined)
+          }
+
+          return collection.toArray.filter((message) =>
+            conversationIds.includes(message.conversationId)
+          )
+        }
       }
 
       throw new Error("Unsupported query")
