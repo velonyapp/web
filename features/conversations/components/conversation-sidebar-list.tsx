@@ -3,7 +3,10 @@
 import * as React from "react"
 
 import { useConversationList } from "@/features/conversations/hooks/use-conversation-list"
-import { ConversationSidebarListItem } from "@/features/conversations/components/conversation-sidebar-list-item"
+import {
+  ConversationSidebarListItem,
+  ConversationSidebarListItemSkeleton,
+} from "@/features/conversations/components/conversation-sidebar-list-item"
 import { useConversationLastMessagesLookup } from "@/features/conversations/hooks/use-conversation-last-messages-lookup"
 import { useUserBatch } from "@/features/identity/hooks/use-user-batch"
 import type { Message } from "@/features/conversations/types/message"
@@ -12,45 +15,37 @@ import type { User } from "@/features/identity/types/user"
 export function ConversationSidebarList({
   ...props
 }: React.ComponentProps<"div">) {
-  const {
-    data: conversationList,
-    error: conversationListError,
-    isPending: isConversationListPending,
-    isError: isConversationListError,
-  } = useConversationList()
-  const {
-    data: conversationLastMessagesLookup,
-    error: conversationLastMessagesLookupError,
-    isPending: isConversationLastMessagesLookupPending,
-    isError: isConversationLastMessagesLookupError,
-  } = useConversationLastMessagesLookup(
-    conversationList?.map((conversation) => conversation.id) ?? []
+  const conversationList = useConversationList()
+  const conversationLastMessagesLookup = useConversationLastMessagesLookup(
+    conversationList.data?.map((conversation) => conversation.id) ?? []
   )
-  const {
-    data: userBatch,
-    error: userBatchError,
-    isError: isUserBatchError,
-  } = useUserBatch(
-    Array.from(conversationLastMessagesLookup?.values() ?? [])
+  const userBatch = useUserBatch(
+    Array.from(conversationLastMessagesLookup.data?.values() ?? [])
       .map((message) => message.userId)
       .filter((user): user is string => user != null)
   )
 
-  if (isConversationListError) {
-    throw conversationListError
+  const isPending =
+    conversationList.isPending ||
+    (conversationList.data.length > 0 &&
+      conversationLastMessagesLookup.isPending) ||
+    userBatch.isPending
+
+  if (conversationList.isError) {
+    throw conversationList.error
   }
-  if (isConversationLastMessagesLookupError) {
-    throw conversationLastMessagesLookupError
+  if (conversationLastMessagesLookup.isError) {
+    throw conversationLastMessagesLookup.error
   }
-  if (isUserBatchError) {
-    throw userBatchError
+  if (userBatch.isError) {
+    throw userBatch.error
   }
 
-  if (isConversationListPending) {
+  if (isPending) {
     return (
       <div {...props}>
         {Array.from({ length: 25 }, (_, index) => (
-          <ConversationSidebarListItem key={index} />
+          <ConversationSidebarListItemSkeleton key={index} />
         ))}
       </div>
     )
@@ -58,15 +53,15 @@ export function ConversationSidebarList({
 
   return (
     <div {...props}>
-      {conversationList?.map((conversation) => {
+      {conversationList.data?.map((conversation) => {
         let lastMessage: Message | undefined = undefined
         let lastMessageUser: User | undefined = undefined
 
-        if (conversationLastMessagesLookup?.has(conversation.id)) {
-          lastMessage = conversationLastMessagesLookup.get(conversation.id)
+        if (conversationLastMessagesLookup.data?.has(conversation.id)) {
+          lastMessage = conversationLastMessagesLookup.data.get(conversation.id)
 
           if (lastMessage?.userId != null) {
-            lastMessageUser = userBatch?.get(lastMessage.userId)
+            lastMessageUser = userBatch.data?.get(lastMessage.userId)
           }
         }
 
@@ -76,7 +71,6 @@ export function ConversationSidebarList({
             conversation={conversation}
             lastMessage={lastMessage}
             lastMessageUser={lastMessageUser}
-            isLastMessagePending={isConversationLastMessagesLookupPending}
           />
         )
       })}
