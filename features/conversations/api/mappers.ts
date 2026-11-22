@@ -15,10 +15,6 @@ export function toConversation(data: unknown): Conversation {
     title: conversation.title,
     description: conversation.description,
     avatarUrl: conversation.avatarUrl ?? null,
-    lastMessageId:
-      conversation.lastMessage == null
-        ? null
-        : messageName.match(conversation.lastMessage).message.toString(),
     createTime: conversation.createTime,
     updateTime: conversation.updateTime,
   }

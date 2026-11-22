@@ -13,16 +13,16 @@ type ConversationSidebarListItemProps = React.ComponentProps<"div"> & {
   conversation?: Conversation
   lastMessage?: Message
   lastMessageUser?: User
+  isLastMessagePending?: boolean
 }
 
 export function ConversationSidebarListItem({
   conversation,
   lastMessage,
   lastMessageUser,
+  isLastMessagePending = false,
   ...props
 }: ConversationSidebarListItemProps) {
-  const isMessagePending =
-    conversation?.lastMessageId != null && lastMessage === undefined
   const isUserPending =
     lastMessage?.userId != null && lastMessageUser === undefined
 
@@ -56,7 +56,7 @@ export function ConversationSidebarListItem({
         </div>
 
         <div className="flex w-full min-w-0 items-end">
-          {!conversation || isMessagePending || isUserPending ? (
+          {!conversation || isLastMessagePending || isUserPending ? (
             <Skeleton className="h-3 w-full" />
           ) : (
             <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">

@@ -4,7 +4,7 @@ import * as React from "react"
 
 import { useConversationList } from "@/features/conversations/hooks/use-conversation-list"
 import { ConversationSidebarListItem } from "@/features/conversations/components/conversation-sidebar-list-item"
-import { useConversationLastMessageBatch } from "@/features/conversations/hooks/use-conversation-last-message-batch"
+import { useConversationLastMessagesLookup } from "@/features/conversations/hooks/use-conversation-last-messages-lookup"
 import { useUserBatch } from "@/features/identity/hooks/use-user-batch"
 import type { Message } from "@/features/conversations/types/message"
 import type { User } from "@/features/identity/types/user"
@@ -19,10 +19,11 @@ export function ConversationSidebarList({
     isError: isConversationListError,
   } = useConversationList()
   const {
-    data: conversationLastMessageBatch,
-    error: conversationLastMessageBatchError,
-    isError: isConversationLastMessageBatchError,
-  } = useConversationLastMessageBatch(
+    data: conversationLastMessagesLookup,
+    error: conversationLastMessagesLookupError,
+    isPending: isConversationLastMessagesLookupPending,
+    isError: isConversationLastMessagesLookupError,
+  } = useConversationLastMessagesLookup(
     conversationList?.map((conversation) => conversation.id) ?? []
   )
   const {
@@ -30,7 +31,7 @@ export function ConversationSidebarList({
     error: userBatchError,
     isError: isUserBatchError,
   } = useUserBatch(
-    Array.from(conversationLastMessageBatch?.values() ?? [])
+    Array.from(conversationLastMessagesLookup?.values() ?? [])
       .map((message) => message.userId)
       .filter((user): user is string => user != null)
   )
@@ -38,8 +39,8 @@ export function ConversationSidebarList({
   if (isConversationListError) {
     throw conversationListError
   }
-  if (isConversationLastMessageBatchError) {
-    throw conversationLastMessageBatchError
+  if (isConversationLastMessagesLookupError) {
+    throw conversationLastMessagesLookupError
   }
   if (isUserBatchError) {
     throw userBatchError
@@ -61,8 +62,8 @@ export function ConversationSidebarList({
         let lastMessage: Message | undefined = undefined
         let lastMessageUser: User | undefined = undefined
 
-        if (conversationLastMessageBatch?.has(conversation.id)) {
-          lastMessage = conversationLastMessageBatch.get(conversation.id)
+        if (conversationLastMessagesLookup?.has(conversation.id)) {
+          lastMessage = conversationLastMessagesLookup.get(conversation.id)
 
           if (lastMessage?.userId != null) {
             lastMessageUser = userBatch?.get(lastMessage.userId)
@@ -75,6 +76,7 @@ export function ConversationSidebarList({
             conversation={conversation}
             lastMessage={lastMessage}
             lastMessageUser={lastMessageUser}
+            isLastMessagePending={isConversationLastMessagesLookupPending}
           />
         )
       })}

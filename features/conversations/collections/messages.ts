@@ -6,13 +6,13 @@ import {
 import { QueryClient } from "@tanstack/query-core"
 import { queryCollectionOptions } from "@tanstack/query-db-collection"
 
-import { batchGetMessages } from "@/features/conversations/api/batch-get-messages"
+import { lookupMessages } from "@/features/conversations/api/lookup-messages"
 import { createMessage } from "@/features/conversations/api/create-message"
 import { listMessages } from "@/features/conversations/api/list-messages"
 import type { Message } from "@/features/conversations/types/message"
 import { getMessage } from "@/features/conversations/api/get-message"
 
-const api = { getMessage, batchGetMessages, listMessages, createMessage }
+const api = { getMessage, lookupMessages, listMessages, createMessage }
 
 export const messagesCollection = collectionOptions("messages", (client) =>
   queryCollectionOptions<Message>({
@@ -77,20 +77,15 @@ export const messagesCollection = collectionOptions("messages", (client) =>
             new Set(ids.filter((id) => !messageMap.has(id)))
           )
           if (missingIds.length > 0) {
-            const messages = await api.batchGetMessages(missingIds)
-            for (const message of messages) {
+            const messages = await api.lookupMessages(missingIds)
+            for (const message of messages.values()) {
               messageMap.set(message.id, message)
             }
           }
 
-          return ids.map((id) => {
-            const message = messageMap.get(id)
-            if (message === undefined) {
-              throw new Error("Unsupported query")
-            }
-
-            return message
-          })
+          return ids
+            .map((id) => messageMap.get(id))
+            .filter((message) => message !== undefined)
         }
       }
 
