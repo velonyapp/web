@@ -14,6 +14,8 @@ import { ConversationSidebarList } from "@/features/conversations/components/con
 export function ConversationSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
+  const viewportRef = React.useRef<HTMLDivElement>(null)
+
   return (
     <Sidebar collapsible="none" className="min-w-0 flex-1" {...props}>
       <SidebarHeader className="gap-3.5 border-b p-4">
@@ -23,10 +25,10 @@ export function ConversationSidebar({
           </div>
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent ref={viewportRef}>
         <SidebarGroup className="px-0">
           <SidebarGroupContent>
-            <ConversationSidebarList />
+            <ConversationSidebarList viewportRef={viewportRef} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

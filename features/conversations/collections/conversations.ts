@@ -8,10 +8,9 @@ import { queryCollectionOptions } from "@tanstack/query-db-collection"
 
 import { lookupConversations } from "@/features/conversations/api/lookup-conversations"
 import { getConversation } from "@/features/conversations/api/get-conversation"
-import { listConversations } from "@/features/conversations/api/list-conversations"
 import type { Conversation } from "@/features/conversations/types/conversation"
 
-const api = { lookupConversations, getConversation, listConversations }
+const api = { lookupConversations, getConversation }
 
 export const conversationsCollection = collectionOptions(
   "conversations",
@@ -29,7 +28,7 @@ export const conversationsCollection = collectionOptions(
         const { filters } = parseLoadSubsetOptions(meta?.loadSubsetOptions)
 
         if (filters.length === 0) {
-          return api.listConversations()
+          return client.collection(conversationsCollection).toArray
         }
 
         if (filters.length === 1 && filters[0].field.join(".") === "id") {
