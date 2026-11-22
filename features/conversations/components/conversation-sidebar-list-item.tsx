@@ -3,6 +3,11 @@
 import * as React from "react"
 import { ConversationAvatar } from "./conversation-avatar"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import type { Conversation } from "@/features/conversations/types/conversation"
 import type { Message } from "@/features/conversations/types/message"
 import type { User } from "@/features/identity/types/user"
@@ -21,38 +26,52 @@ export function ConversationSidebarListItem({
   ...props
 }: ConversationSidebarListItemProps) {
   return (
-    <Link href={`/c/${conversation.id}`} className="block">
-      <div
-        className="flex w-full max-w-full min-w-0 items-start gap-2 overflow-hidden border-b p-4 text-sm leading-tight last:border-b-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-        {...props}
+    <Tooltip disabled={!lastMessage}>
+      <TooltipTrigger
+        render={<Link href={`/c/${conversation.id}`} className="block" />}
       >
-        <ConversationAvatar conversation={conversation} />
+        <div
+          className="flex w-full max-w-full min-w-0 items-start gap-2 overflow-hidden border-b p-4 text-sm leading-tight last:border-b-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          {...props}
+        >
+          <ConversationAvatar conversation={conversation} />
 
-        <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
-          <div className="flex w-full min-w-0 items-start gap-2">
-            <p className="min-w-0 flex-1 truncate">{conversation.title}</p>
+          <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
+            <div className="flex w-full min-w-0 items-start gap-2">
+              <p className="min-w-0 flex-1 truncate">{conversation.title}</p>
 
-            {lastMessage && (
-              <time
-                dateTime={lastMessage.createTime.toISOString()}
-                className="shrink-0 text-[10px] text-muted-foreground"
-              >
-                {formatLastMessageTime(lastMessage.createTime)}
-              </time>
-            )}
-          </div>
-
-          <div className="flex w-full min-w-0 items-end">
-            <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-              {formatLastMessage(
-                lastMessageUser?.username,
-                lastMessage?.content
+              {lastMessage && (
+                <time
+                  dateTime={lastMessage.createTime.toISOString()}
+                  className="shrink-0 text-[10px] text-muted-foreground"
+                >
+                  {formatLastMessageTime(lastMessage.createTime)}
+                </time>
               )}
-            </p>
+            </div>
+
+            <div className="flex w-full min-w-0 items-end">
+              <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                {formatLastMessage(
+                  lastMessageUser?.username,
+                  lastMessage?.content
+                )}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-    </Link>
+      </TooltipTrigger>
+
+      <TooltipContent
+        side="right"
+        align="center"
+        className="bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 [&>div]:bg-popover"
+      >
+        <p className="wrap-anywhere whitespace-pre-wrap">
+          {formatLastMessage(lastMessageUser?.username, lastMessage?.content)}
+        </p>
+      </TooltipContent>
+    </Tooltip>
   )
 }
 
