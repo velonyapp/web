@@ -20,9 +20,7 @@ export function ConversationSidebar({
     <Sidebar collapsible="none" className="min-w-0 flex-1" {...props}>
       <SidebarHeader className="gap-3.5 border-b p-4">
         <div className="flex w-full items-center justify-between">
-          <div className="text-base font-medium text-foreground">
-            Conversation
-          </div>
+          <div className="text-xl font-medium text-foreground">VelonY</div>
         </div>
       </SidebarHeader>
       <SidebarContent ref={viewportRef}>

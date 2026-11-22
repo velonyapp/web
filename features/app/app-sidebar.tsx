@@ -16,7 +16,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { BotIcon, CpuIcon, MessagesSquareIcon } from "lucide-react"
+import { BotIcon, CpuIcon, HouseIcon } from "lucide-react"
 import Image from "next/image"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -54,7 +54,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   tooltip={{
-                    children: "Conversations",
+                    children: "Home",
                     hidden: false,
                   }}
                   render={<Link href="/" />}
@@ -64,8 +64,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   isActive={pathname === "/" || pathname.startsWith("/c/")}
                   className="px-2"
                 >
-                  <MessagesSquareIcon />
-                  <span className="sr-only">Conversations</span>
+                  <HouseIcon />
+                  <span className="sr-only">Home</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
