@@ -49,7 +49,10 @@ export function ConversationHeader({
             <Skeleton className="h-3 w-3/4" />
           ) : (
             <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-              {conversation?.description}
+              {conversation?.description.trim()
+                ? conversation.description
+                : conversation &&
+                  `Created at ${createTimeFormatter.format(conversation.createTime)}`}
             </p>
           )}
         </div>
@@ -57,3 +60,8 @@ export function ConversationHeader({
     </div>
   )
 }
+
+const createTimeFormatter = new Intl.DateTimeFormat("en", {
+  dateStyle: "medium",
+  timeStyle: "short",
+})
