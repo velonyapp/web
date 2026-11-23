@@ -7,7 +7,7 @@ import { messagesCollection } from "@/features/conversations/collections/message
 import { lookupMessages } from "@/features/conversations/api/lookup-messages"
 import { messageName } from "@/lib/api/resource-names"
 
-export function useConversationLastMessagesLookup(ids: string[]) {
+export function useConversationLastMessageBatch(ids: string[]) {
   const dbClient = useDbClient()
   const collection = dbClient.collection(messagesCollection)
 
@@ -25,7 +25,7 @@ export function useConversationLastMessagesLookup(ids: string[]) {
   })
 
   const lookup = useQuery({
-    queryKey: ["conversation-last-messages-lookup", uniqueIds],
+    queryKey: ["conversation-last-message-batch", uniqueIds],
     queryFn: () =>
       lookupMessages(
         uniqueIds.map((id) =>
