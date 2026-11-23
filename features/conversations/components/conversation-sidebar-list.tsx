@@ -4,12 +4,10 @@ import * as React from "react"
 
 import { Spinner } from "@/components/ui/spinner"
 import { useConversationList } from "@/features/conversations/hooks/use-conversation-list"
-import {
-  ConversationSidebarListItem,
-  ConversationSidebarListItemSkeleton,
-} from "@/features/conversations/components/conversation-sidebar-list-item"
+import { ConversationSidebarListItem } from "@/features/conversations/components/conversation-sidebar-list-item"
 import { useConversationLastMessageBatch } from "@/features/conversations/hooks/use-conversation-last-message-batch"
 import { useUserBatch } from "@/features/identity/hooks/use-user-batch"
+import type { Conversation } from "@/features/conversations/types/conversation"
 import type { Message } from "@/features/conversations/types/message"
 import type { User } from "@/features/identity/types/user"
 
@@ -22,7 +20,6 @@ export function ConversationSidebarList({
   ...props
 }: ConversationSidebarListProps) {
   const oldestConversationRef = React.useRef<HTMLDivElement>(null)
-  const [isInitialPending, setIsInitialPending] = React.useState(true)
 
   const conversationList = useConversationList()
   const { hasNextPage, isFetching, isFetchingNextPage, fetchNextPage } =
@@ -38,16 +35,6 @@ export function ConversationSidebarList({
       .filter((user): user is string => user != null)
   )
 
-  const isPending =
-    conversationList.isPending ||
-    (conversationList.data.length > 0 &&
-      conversationLastMessageBatch.isPending) ||
-    userBatch.isPending
-
-  if (isInitialPending && !isPending) {
-    setIsInitialPending(false)
-  }
-
   const paginationRef = React.useRef({
     hasNextPage,
     isFetching,
@@ -61,7 +48,7 @@ export function ConversationSidebarList({
   React.useEffect(() => {
     const viewport = viewportRef.current
     const oldestConversation = oldestConversationRef.current
-    if (!viewport || !oldestConversation || isInitialPending) {
+    if (!viewport || !oldestConversation) {
       return
     }
 
@@ -97,7 +84,7 @@ export function ConversationSidebarList({
     observer.observe(oldestConversation)
 
     return () => observer.disconnect()
-  }, [viewportRef, oldestConversationId, isInitialPending])
+  }, [viewportRef, oldestConversationId])
 
   if (conversationList.isError) {
     throw conversationList.error
@@ -109,23 +96,21 @@ export function ConversationSidebarList({
     throw userBatch.error
   }
 
-  if (isInitialPending) {
-    return (
-      <div {...props}>
-        {Array.from({ length: 25 }, (_, index) => (
-          <ConversationSidebarListItemSkeleton key={index} />
-        ))}
-      </div>
-    )
-  }
+  const conversations: (Conversation | undefined)[] =
+    conversationList.isPending && conversationList.data.length === 0
+      ? Array.from({ length: 25 })
+      : conversationList.data
 
   return (
     <div {...props}>
-      {conversationList.data?.map((conversation, index, conversations) => {
+      {conversations.map((conversation, index) => {
         let lastMessage: Message | undefined = undefined
         let lastMessageUser: User | undefined = undefined
 
-        if (conversationLastMessageBatch.data?.has(conversation.id)) {
+        if (
+          conversation &&
+          conversationLastMessageBatch.data?.has(conversation.id)
+        ) {
           lastMessage = conversationLastMessageBatch.data.get(conversation.id)
 
           if (lastMessage?.userId != null) {
@@ -133,17 +118,25 @@ export function ConversationSidebarList({
           }
         }
 
+        const isConversationPending =
+          conversationList.isPending && !conversation
+        const isPreviewPending =
+          (conversationLastMessageBatch.isPending || userBatch.isPending) &&
+          (!lastMessage || !lastMessageUser)
+
         return (
           <ConversationSidebarListItem
-            key={conversation.id}
+            key={conversation?.id ?? index}
             ref={
-              index === conversations.length - 1
+              conversation && index === conversations.length - 1
                 ? oldestConversationRef
                 : undefined
             }
             conversation={conversation}
             lastMessage={lastMessage}
             lastMessageUser={lastMessageUser}
+            isConversationPending={isConversationPending}
+            isPreviewPending={isPreviewPending}
           />
         )
       })}
