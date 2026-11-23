@@ -11,14 +11,12 @@ import {
 import type { Conversation } from "@/features/conversations/types/conversation"
 import type { Message } from "@/features/conversations/types/message"
 import type { User } from "@/features/identity/types/user"
-import { cn } from "cn"
 import Link from "next/link"
 
 type ConversationSidebarListItemProps = React.ComponentProps<"div"> & {
-  conversation?: Conversation
+  conversation: Conversation
   lastMessage?: Message
   lastMessageUser?: User
-  isConversationPending?: boolean
   isPreviewPending?: boolean
 }
 
@@ -26,66 +24,46 @@ export function ConversationSidebarListItem({
   conversation,
   lastMessage,
   lastMessageUser,
-  isConversationPending = false,
   isPreviewPending = false,
   ...props
 }: ConversationSidebarListItemProps) {
-  const content = (
-    <div
-      className={cn(
-        "flex w-full max-w-full min-w-0 items-start gap-2 overflow-hidden border-b p-4 text-sm leading-tight last:border-b-0",
-        conversation &&
-          "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-      )}
-      {...props}
-    >
-      <ConversationAvatar conversation={conversation} />
-
-      <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
-        <div className="flex w-full min-w-0 items-start gap-2">
-          {isConversationPending ? (
-            <Skeleton className="h-4 w-3/4" />
-          ) : (
-            <p className="min-w-0 flex-1 truncate">{conversation?.title}</p>
-          )}
-
-          {conversation &&
-            lastMessage &&
-            !isConversationPending &&
-            !isPreviewPending && (
-              <time
-                dateTime={lastMessage.createTime.toISOString()}
-                className="shrink-0 text-[10px] text-muted-foreground"
-              >
-                {formatLastMessageTime(lastMessage.createTime)}
-              </time>
-            )}
-        </div>
-
-        <div className="flex w-full min-w-0 items-end">
-          {!conversation || isConversationPending || isPreviewPending ? (
-            <Skeleton className="h-3 w-full" />
-          ) : (
-            <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-              {formatLastMessage(
-                lastMessageUser?.username,
-                lastMessage?.content
-              )}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-
-  if (!conversation) return content
-
   return (
     <Tooltip disabled={!lastMessage || isPreviewPending}>
       <TooltipTrigger
         render={<Link href={`/c/${conversation.id}`} className="block" />}
       >
-        {content}
+        <div
+          className="flex w-full max-w-full min-w-0 items-start gap-2 overflow-hidden border-b p-4 text-sm leading-tight last:border-b-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          {...props}
+        >
+          <ConversationAvatar conversation={conversation} />
+
+          <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
+            <div className="flex w-full min-w-0 items-start gap-2">
+              <p className="min-w-0 flex-1 truncate">{conversation.title}</p>
+
+              {lastMessage && !isPreviewPending && (
+                <time
+                  dateTime={lastMessage.createTime.toISOString()}
+                  className="shrink-0 text-[10px] text-muted-foreground"
+                >
+                  {formatLastMessageTime(lastMessage.createTime)}
+                </time>
+              )}
+            </div>
+
+            <div className="flex w-full min-w-0 items-end">
+              <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+                {isPreviewPending
+                  ? "Loading..."
+                  : formatLastMessage(
+                      lastMessageUser?.username,
+                      lastMessage?.content
+                    )}
+              </p>
+            </div>
+          </div>
+        </div>
       </TooltipTrigger>
 
       <TooltipContent
@@ -98,6 +76,29 @@ export function ConversationSidebarListItem({
         </p>
       </TooltipContent>
     </Tooltip>
+  )
+}
+
+export function ConversationSidebarListItemSkeleton({
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      className="flex w-full max-w-full min-w-0 items-start gap-2 overflow-hidden border-b p-4 text-sm leading-tight last:border-b-0"
+      {...props}
+    >
+      <Skeleton className="size-10 shrink-0 rounded-full" />
+
+      <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
+        <div className="flex w-full min-w-0 items-start gap-2">
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+
+        <div className="flex w-full min-w-0 items-end">
+          <Skeleton className="h-3 w-full" />
+        </div>
+      </div>
+    </div>
   )
 }
 
