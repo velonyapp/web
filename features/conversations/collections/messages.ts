@@ -1,146 +1,54 @@
 import {
   BasicIndex,
   collectionOptions,
-  parseLoadSubsetOptions,
+  type SyncConfig,
 } from "@tanstack/react-db"
-import { QueryClient } from "@tanstack/query-core"
-import { queryCollectionOptions } from "@tanstack/query-db-collection"
 
-import { lookupMessages } from "@/features/conversations/api/lookup-messages"
-import { createMessage } from "@/features/conversations/api/create-message"
-import { listMessages } from "@/features/conversations/api/list-messages"
 import type { Message } from "@/features/conversations/types/message"
-import { getMessage } from "@/features/conversations/api/get-message"
 
-const api = { getMessage, lookupMessages, listMessages, createMessage }
+type Context = Parameters<SyncConfig<Message, string>["sync"]>[0]
 
-export const messagesCollection = collectionOptions("messages", (client) =>
-  queryCollectionOptions<Message>({
+export const messagesCollection = collectionOptions("messages", () => {
+  let context: Context | undefined
+
+  return {
     id: "messages",
-    getKey: (row) => row.id,
+    getKey: (row: Message) => row.id,
     autoIndex: "eager",
     defaultIndexType: BasicIndex,
-    syncMode: "on-demand",
-    queryKey: ["messages"],
-    queryClient: client.requireDependency<QueryClient>("queryClient"),
-    onInsert: async ({ transaction, collection }) => {
-      await Promise.all(
-        transaction.mutations.map(async ({ modified }) => {
-          const message = await api.createMessage(
-            modified.conversationId,
-            modified.id,
-            modified.userId!,
-            modified.content
-          )
-          await collection.utils.writeUpsert(message)
-        })
-      )
+    startSync: true,
+    gcTime: Infinity,
+
+    sync: {
+      sync(params: Context) {
+        context = params
+
+        return () => {
+          context = undefined
+        }
+      },
     },
-    queryFn: async ({ meta }): Promise<Message[]> => {
-      const options = meta?.loadSubsetOptions
-      const { filters } = parseLoadSubsetOptions(meta?.loadSubsetOptions)
 
-      if (filters.length === 1 && filters[0].field.join(".") === "id") {
-        const { operator, value } = filters[0]
-
-        if (operator === "eq") {
-          const id: string = value
-
-          if (!options?.refetch) {
-            const message = client.collection(messagesCollection).get(id)
-            if (message) {
-              return [message]
-            }
-          }
-
-          const message = await api.getMessage(value)
-          return [message]
+    utils: {
+      applyPatches(patches: Parameters<Context["write"]>[0][]) {
+        if (!context) {
+          throw new Error("Sync not initialized")
         }
 
-        if (operator === "in") {
-          const ids: string[] = value
+        const { begin, write, commit } = context
 
-          const messageMap = new Map<string, Message>()
+        begin()
 
-          if (!options?.refetch) {
-            for (const id of ids) {
-              const message = client.collection(messagesCollection).get(id)
-              if (message === undefined) {
-                continue
-              }
-
-              messageMap.set(id, message)
-            }
-          }
-
-          const missingIds = Array.from(
-            new Set(ids.filter((id) => !messageMap.has(id)))
-          )
-          if (missingIds.length > 0) {
-            const messages = await api.lookupMessages(missingIds)
-            for (const message of messages.values()) {
-              messageMap.set(message.id, message)
-            }
-          }
-
-          return ids
-            .map((id) => messageMap.get(id))
-            .filter((message) => message !== undefined)
-        }
-      }
-
-      if (
-        filters.length === 1 &&
-        filters[0].field.join(".") === "conversationId"
-      ) {
-        const { operator, value } = filters[0]
-
-        if (operator === "eq") {
-          const collection = client.collection(messagesCollection)
-
-          const conversationId: string = value
-
-          const index = [...collection.indexes.values()].find((index) =>
-            index.matchesField(["conversationId"])
-          )
-
-          if (index !== undefined) {
-            const ids = [...index.lookup("eq", conversationId)]
-
-            return ids
-              .map((id) => collection.get(id))
-              .filter((message) => message !== undefined)
-          }
-
-          return collection.toArray.filter(
-            (message) => message.conversationId === conversationId
-          )
+        for (const patch of patches) {
+          write(patch)
         }
 
-        if (operator === "in") {
-          const collection = client.collection(messagesCollection)
+        commit()
+      },
 
-          const conversationIds: string[] = value
-
-          const index = [...collection.indexes.values()].find((index) =>
-            index.matchesField(["conversationId"])
-          )
-
-          if (index !== undefined) {
-            const ids = [...index.lookup("in", conversationIds)]
-
-            return ids
-              .map((id) => collection.get(id))
-              .filter((message) => message !== undefined)
-          }
-
-          return collection.toArray.filter((message) =>
-            conversationIds.includes(message.conversationId)
-          )
-        }
-      }
-
-      throw new Error("Unsupported query")
+      markReady() {
+        context?.markReady()
+      },
     },
-  })
-)
+  }
+})

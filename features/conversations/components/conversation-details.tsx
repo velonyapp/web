@@ -11,6 +11,7 @@ import {
   SubSidebarContent,
 } from "@/components/ui/sub-sidebar"
 import { useConversation } from "@/features/conversations/hooks/use-conversation"
+import { useSyncConversation } from "@/features/conversations/hooks/use-sync-conversation"
 import { ConversationAvatar } from "./conversation-avatar"
 
 type ConversationDetailsProps = {
@@ -23,12 +24,8 @@ export function ConversationDetails({
   onClose,
 }: ConversationDetailsProps) {
   const titleId = React.useId()
-  const {
-    data: conversation,
-    error,
-    isError,
-    isPending,
-  } = useConversation(conversationId)
+  const { data: conversation } = useConversation(conversationId)
+  const { error, isError, isPending } = useSyncConversation(conversationId)
 
   if (isError) throw error
 
@@ -59,7 +56,7 @@ export function ConversationDetails({
           <ConversationAvatar conversation={conversation} size={96} />
 
           <div className="w-full space-y-2">
-            {isPending ? (
+            {!conversation && isPending ? (
               <Skeleton className="mx-auto h-6 w-3/5" />
             ) : (
               <h3 className="text-lg font-semibold wrap-anywhere">
@@ -67,7 +64,7 @@ export function ConversationDetails({
               </h3>
             )}
 
-            {isPending ? (
+            {!conversation && isPending ? (
               <div className="space-y-2">
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="mx-auto h-4 w-3/4" />

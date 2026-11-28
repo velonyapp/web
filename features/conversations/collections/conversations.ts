@@ -1,90 +1,57 @@
 import {
   BasicIndex,
   collectionOptions,
-  parseLoadSubsetOptions,
+  type SyncConfig,
 } from "@tanstack/react-db"
-import { QueryClient } from "@tanstack/query-core"
-import { queryCollectionOptions } from "@tanstack/query-db-collection"
 
-import { lookupConversations } from "@/features/conversations/api/lookup-conversations"
-import { getConversation } from "@/features/conversations/api/get-conversation"
 import type { Conversation } from "@/features/conversations/types/conversation"
 
-const api = { lookupConversations, getConversation }
+type Context = Parameters<SyncConfig<Conversation, string>["sync"]>[0]
 
 export const conversationsCollection = collectionOptions(
   "conversations",
-  (client) =>
-    queryCollectionOptions<Conversation>({
+  () => {
+    let context: Context | undefined
+
+    return {
       id: "conversations",
-      getKey: (row) => row.id,
+      getKey: (row: Conversation) => row.id,
       autoIndex: "eager",
       defaultIndexType: BasicIndex,
-      syncMode: "on-demand",
-      queryKey: ["conversations"],
-      queryClient: client.requireDependency<QueryClient>("queryClient"),
-      queryFn: async ({ meta }): Promise<Conversation[]> => {
-        const options = meta?.loadSubsetOptions
-        const { filters } = parseLoadSubsetOptions(meta?.loadSubsetOptions)
+      startSync: true,
+      gcTime: Infinity,
 
-        if (filters.length === 0) {
-          return client.collection(conversationsCollection).toArray
-        }
+      sync: {
+        sync(params: Context) {
+          context = params
 
-        if (filters.length === 1 && filters[0].field.join(".") === "id") {
-          const { operator, value } = filters[0]
-
-          if (operator === "eq") {
-            const id: string = value
-
-            if (!options?.refetch) {
-              const conversation = client
-                .collection(conversationsCollection)
-                .get(id)
-              if (conversation) {
-                return [conversation]
-              }
-            }
-
-            const conversation = await api.getConversation(value)
-            return [conversation]
+          return () => {
+            context = undefined
           }
-
-          if (operator === "in") {
-            const ids: string[] = value
-
-            const conversationMap = new Map<string, Conversation>()
-
-            if (!options?.refetch) {
-              for (const id of ids) {
-                const conversation = client
-                  .collection(conversationsCollection)
-                  .get(id)
-                if (conversation === undefined) {
-                  continue
-                }
-
-                conversationMap.set(id, conversation)
-              }
-            }
-
-            const missingIds = Array.from(
-              new Set(ids.filter((id) => !conversationMap.has(id)))
-            )
-            if (missingIds.length > 0) {
-              const conversations = await api.lookupConversations(missingIds)
-              for (const conversation of conversations.values()) {
-                conversationMap.set(conversation.id, conversation)
-              }
-            }
-
-            return ids
-              .map((id) => conversationMap.get(id))
-              .filter((conversation) => conversation !== undefined)
-          }
-        }
-
-        throw new Error("Unsupported query")
+        },
       },
-    })
+
+      utils: {
+        applyPatches(patches: Parameters<Context["write"]>[0][]) {
+          if (!context) {
+            throw new Error("Sync not initialized")
+          }
+
+          const { begin, write, commit } = context
+
+          begin()
+
+          for (const patch of patches) {
+            write(patch)
+          }
+
+          commit()
+        },
+
+        markReady() {
+          context?.markReady()
+        },
+      },
+    }
+  }
 )

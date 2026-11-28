@@ -1,80 +1,54 @@
 import {
   BasicIndex,
   collectionOptions,
-  parseLoadSubsetOptions,
+  type SyncConfig,
 } from "@tanstack/react-db"
-import { QueryClient } from "@tanstack/query-core"
-import { queryCollectionOptions } from "@tanstack/query-db-collection"
 
-import { lookupUsers } from "@/features/identity/api/lookup-users"
-import { getUser } from "@/features/identity/api/get-user"
 import type { User } from "@/features/identity/types/user"
 
-const api = { lookupUsers, getUser }
+type Context = Parameters<SyncConfig<User, string>["sync"]>[0]
 
-export const usersCollection = collectionOptions("users", (client) =>
-  queryCollectionOptions<User>({
+export const usersCollection = collectionOptions("users", () => {
+  let context: Context | undefined
+
+  return {
     id: "users",
-    getKey: (row) => row.id,
+    getKey: (row: User) => row.id,
     autoIndex: "eager",
     defaultIndexType: BasicIndex,
-    syncMode: "on-demand",
-    queryKey: ["users"],
-    queryClient: client.requireDependency<QueryClient>("queryClient"),
-    queryFn: async ({ meta }): Promise<User[]> => {
-      const options = meta?.loadSubsetOptions
-      const { filters } = parseLoadSubsetOptions(meta?.loadSubsetOptions)
+    startSync: true,
+    gcTime: Infinity,
 
-      if (filters.length === 1 && filters[0].field.join(".") === "id") {
-        const { operator, value } = filters[0]
+    sync: {
+      sync(params: Context) {
+        context = params
 
-        if (operator === "eq") {
-          const id: string = value
-
-          if (!options?.refetch) {
-            const user = client.collection(usersCollection).get(id)
-            if (user) {
-              return [user]
-            }
-          }
-
-          const user = await api.getUser(value)
-          return [user]
+        return () => {
+          context = undefined
         }
-
-        if (operator === "in") {
-          const ids: string[] = value
-
-          const userMap = new Map<string, User>()
-
-          if (!options?.refetch) {
-            for (const id of ids) {
-              const user = client.collection(usersCollection).get(id)
-              if (user === undefined) {
-                continue
-              }
-
-              userMap.set(id, user)
-            }
-          }
-
-          const missingIds = Array.from(
-            new Set(ids.filter((id) => !userMap.has(id)))
-          )
-          if (missingIds.length > 0) {
-            const users = await api.lookupUsers(missingIds)
-            for (const user of users.values()) {
-              userMap.set(user.id, user)
-            }
-          }
-
-          return ids
-            .map((id) => userMap.get(id))
-            .filter((user) => user !== undefined)
-        }
-      }
-
-      throw new Error("Unsupported query")
+      },
     },
-  })
-)
+
+    utils: {
+      applyPatches(patches: Parameters<Context["write"]>[0][]) {
+        if (!context) {
+          throw new Error("Sync not initialized")
+        }
+
+        const { begin, write, commit } = context
+
+        begin()
+
+        for (const patch of patches) {
+          write(patch)
+        }
+
+        commit()
+      },
+
+      markReady() {
+        context?.markReady()
+      },
+    },
+  }
+})
