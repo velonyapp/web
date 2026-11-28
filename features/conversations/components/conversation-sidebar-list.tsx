@@ -66,8 +66,8 @@ export function ConversationSidebarList({
         }
 
         const isPreviewPending =
-          (lastMessageBatch.isPending || userBatch.isPending) &&
-          (!lastMessage || !lastMessageUser)
+          (lastMessageBatch.isPending && !lastMessage) ||
+          (userBatch.isPending && !lastMessageUser)
 
         return (
           <ConversationSidebarListItem
