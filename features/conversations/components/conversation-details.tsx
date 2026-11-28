@@ -4,17 +4,23 @@ import * as React from "react"
 import { XIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   SubSidebar,
   SubSidebarHeader,
   SubSidebarContent,
 } from "@/components/ui/sub-sidebar"
+import {
+  ConversationDetailsContent,
+  ConversationDetailsContentSkeleton,
+} from "@/features/conversations/components/conversation-details-content"
 import { useConversation } from "@/features/conversations/hooks/use-conversation"
 import { useSyncConversation } from "@/features/conversations/hooks/use-sync-conversation"
-import { ConversationAvatar } from "./conversation-avatar"
+import { cn } from "cn"
 
-type ConversationDetailsProps = {
+type ConversationDetailsProps = Omit<
+  React.ComponentProps<typeof SubSidebar>,
+  "side" | "onClose" | "children"
+> & {
   conversationId: string
   onClose: () => void
 }
@@ -22,8 +28,10 @@ type ConversationDetailsProps = {
 export function ConversationDetails({
   conversationId,
   onClose,
+  className,
+  style,
+  ...props
 }: ConversationDetailsProps) {
-  const titleId = React.useId()
   const { data: conversation } = useConversation(conversationId)
   const { error, isError, isPending } = useSyncConversation(conversationId)
 
@@ -32,50 +40,33 @@ export function ConversationDetails({
   return (
     <SubSidebar
       side="right"
-      aria-labelledby={titleId}
-      className="h-dvh"
-      style={{ "--sidebar-width": "min(22.5rem,50cqw)" } as React.CSSProperties}
+      className={cn("h-dvh", className)}
+      style={
+        {
+          "--sidebar-width": "min(22.5rem,50cqw)",
+          ...style,
+        } as React.CSSProperties
+      }
+      {...props}
     >
       <SubSidebarHeader className="shrink-0 flex-row items-center gap-2 border-b p-4">
         <Button
           variant="ghost"
           size="icon-sm"
           className="cursor-pointer"
-          aria-label="Close conversation details"
           onClick={onClose}
         >
-          <XIcon aria-hidden="true" />
+          <XIcon />
         </Button>
-        <h2 id={titleId} className="text-base font-medium text-foreground">
-          Details
-        </h2>
+        <h2 className="text-base font-medium text-foreground">Details</h2>
       </SubSidebarHeader>
 
       <SubSidebarContent className="p-6 text-center text-sm">
-        <div className="flex flex-col items-center gap-4">
-          <ConversationAvatar conversation={conversation} size={96} />
-
-          <div className="w-full space-y-2">
-            {!conversation && isPending ? (
-              <Skeleton className="mx-auto h-6 w-3/5" />
-            ) : (
-              <h3 className="text-lg font-semibold wrap-anywhere">
-                {conversation?.title}
-              </h3>
-            )}
-
-            {!conversation && isPending ? (
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="mx-auto h-4 w-3/4" />
-              </div>
-            ) : (
-              <p className="leading-relaxed wrap-anywhere whitespace-pre-wrap text-muted-foreground">
-                {conversation?.description}
-              </p>
-            )}
-          </div>
-        </div>
+        {conversation ? (
+          <ConversationDetailsContent conversation={conversation} />
+        ) : isPending ? (
+          <ConversationDetailsContentSkeleton />
+        ) : null}
       </SubSidebarContent>
     </SubSidebar>
   )
